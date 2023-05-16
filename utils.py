@@ -2,6 +2,10 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 
+def test():
+    return None
+
+
 def gamma_fnc(x):
     """
     Customize damping FWHM gamma as a function of energy
