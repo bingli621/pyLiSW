@@ -40,7 +40,6 @@ class Atoms(object):
         theta=0,
         n=(0, 1, 0),
         aniso=[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-        test=None,
     ):
         """
         t is the basis vector in units of effective lattice parameters
