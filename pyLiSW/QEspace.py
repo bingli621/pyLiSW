@@ -119,10 +119,10 @@ class QEspace(object):
         self.x, self.y, self.z = np.meshgrid(
             self.xlist, self.ylist, self.zlist, indexing="ij"
         )
-        self.h=inv_p[0,0]*self.x +inv_p[0,1]*self.y+inv_p[0,2]*self.z
-        self.k=inv_p[1,0]*self.x +inv_p[1,1]*self.y+inv_p[1,2]*self.z
-        self.l=inv_p[2,0]*self.x +inv_p[2,1]*self.y+inv_p[2,2]*self.z
-       
+        self.h = inv_p[0, 0] * self.x + inv_p[0, 1] * self.y + inv_p[0, 2] * self.z
+        self.k = inv_p[1, 0] * self.x + inv_p[1, 1] * self.y + inv_p[1, 2] * self.z
+        self.l = inv_p[2, 0] * self.x + inv_p[2, 1] * self.y + inv_p[2, 2] * self.z
+
         self.q_mesh = (
             self.h * 2 * np.pi / Sample.a_eff,
             self.k * 2 * np.pi / Sample.b_eff,
@@ -134,7 +134,7 @@ class QEspace(object):
         self.data = None
         self.err = None
 
-    def load_data(self, datafiles, scalefactor=1, moveaxis=(2, 0)):
+    def load_data(self, datafiles, scalefactor=1, moveaxis=None):  # (2, 0)):
         """
         Load multiple ascii files
         Might need to change axes orders
@@ -157,19 +157,25 @@ class QEspace(object):
                 data_raw = np.loadtxt(datafile, skiprows=0)
                 data_int = data_raw[:, 0] * scalefactor
                 data_err = data_raw[:, 1] * scalefactor
-                data[i] = data_int.reshape(tuple(dim))
-                err[i] = (data_err.reshape(tuple(dim))) ** 2
+                # data[i] = data_int.reshape(tuple(dim))
+                # err[i] = (data_err.reshape(tuple(dim))) ** 2
+                data[i] = data_int.reshape(tuple(sz))
+                err[i] = (data_err.reshape(tuple(sz))) ** 2
                 # --------------------------------------------
-                # move axis based on the axis from mantid 0K0
-                data[i] = np.moveaxis(data[i], moveaxis[0], moveaxis[1])
-                err[i] = np.moveaxis(err[i], moveaxis[0], moveaxis[1])
+                if moveaxis is not None:  # move axis based on the axis from mantid 0K0
+                    data[i] = np.moveaxis(data[i], moveaxis[0], moveaxis[1])
+                    err[i] = np.moveaxis(err[i], moveaxis[0], moveaxis[1])
 
         if np.size(datafiles) == 1:
             self.data = data[0]
             self.err = np.sqrt(err[0]) / (~np.isnan(data[0]))
         else:
-            self.data = np.nanmean(data, axis=0)
-            self.err = np.sqrt(np.nansum(err, axis=0)) / np.sum(~np.isnan(data), axis=0)
+            np.seterr(divide="ignore", invalid="ignore")
+            cnt = np.sum(~np.isnan(data), axis=0)
+            self.data = np.nansum(data, axis=0) / cnt
+            self.err = np.sqrt(np.nansum(err, axis=0)) / cnt
+            np.seterr(divide="warn", invalid="warn")
+
         return self.data, self.err
 
     def slice(
@@ -210,11 +216,7 @@ class QEspace(object):
             amp = self.amp[idx_mat]
             cnt = np.nansum(~np.isnan(amp), axis=tuple(bin_axes))
             slice = np.nansum(amp, axis=tuple(bin_axes)) / cnt
-            # calculate the boundary of kinematic limit
-            if self.ei is not None and (3 in plot_axes):
-                axes = tuple({0, 1, 2} - (set(plot_axes) - {3}))
-                kin_lim = self.kin_lim[idx_mat[0:-1]]
-                kin_lim = np.amax(kin_lim, axis=axes)
+
         else:
             amp = self.data[idx_mat]
             err_sq = self.err[idx_mat] ** 2
@@ -416,8 +418,11 @@ class QEspace(object):
             amp_data = self.data[idx_mat]
             err_sq = self.err[idx_mat] ** 2
             cnt = np.nansum(~np.isnan(amp_data), axis=tuple(bin_axes))
+            # suppress true_divide warning
+            np.seterr(divide="ignore", invalid="ignore")
             cut = np.nansum(amp_data, axis=tuple(bin_axes)) / cnt
             err = np.sqrt(np.nansum(err_sq, axis=tuple(bin_axes))) / cnt
+            np.seterr(divide="warn", invalid="warn")
 
         # ------- determine plot ranges based on slice_ranges ---------
         qe_range = qe_ranges_list[plot_axis]
@@ -473,12 +478,14 @@ class QEspace(object):
                     err_temp[idx] += err[i] ** 2
                     cnt_temp[idx] += 1
             if SIM:
-                # cut_sim_temp /= cnt_sim_temp[cnt_sim_temp]
+                cut_sim_temp /= cnt_sim_temp  # [cnt_sim_temp] ??
                 cut_sim = cut_sim_temp
             if self.data is not None:
+                np.seterr(divide="ignore", invalid="ignore")
                 cut_temp /= cnt_temp
                 cut = cut_temp
                 err = np.sqrt(err_temp) / cnt_temp
+                np.seterr(divide="warn", invalid="warn")
 
         # ---------------- Axes and title ----------------
         cut_xlabel = self.axes_labels[plot_axis]
@@ -536,8 +543,8 @@ class QEspace(object):
         if q_axis == "x":
             plot_x = self.xlist
             label_x = self.axes_labels[0]
-            idx1 = round(nq1 / 2)
-            idx2 = round(nq2 / 2)
+            idx1 = round((nq1-1) / 2)
+            idx2 = round((nq2-1) / 2)
             plot_ys = self.eng[:, idx1, idx2, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[1],
@@ -548,8 +555,8 @@ class QEspace(object):
         elif q_axis == "y":
             plot_x = self.ylist
             label_x = self.axes_labels[1]
-            idx0 = round(nq0 / 2)
-            idx2 = round(nq2 / 2)
+            idx0 = round((nq0-1) / 2)
+            idx2 = round((nq2-1) / 2)
             plot_ys = self.eng[idx0, :, idx2, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[0],
@@ -560,8 +567,8 @@ class QEspace(object):
         elif q_axis == "z":
             plot_x = self.zlist
             label_x = self.axes_labels[2]
-            idx0 = round(nq0 / 2)
-            idx1 = round(nq1 / 2)
+            idx0 = round((nq0-1) / 2)
+            idx1 = round((nq1-1) / 2)
             plot_ys = self.eng[idx0, idx1, :, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[0],

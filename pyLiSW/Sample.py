@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from Atoms import Bonds
+from Bonds import Bonds
 from tabulate import tabulate
 
 

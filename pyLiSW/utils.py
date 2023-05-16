@@ -2,8 +2,25 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 
-def test():
-    return None
+def rot_ang(theta, phi):
+    """
+    Rotate angle theta about x axis and phi about z axis, in degrees
+    """
+    rp_mat = R.from_euler("xz", [theta, phi], degrees=True).as_matrix()
+    # print(rp_mat)
+    return np.array(rp_mat)
+
+
+def rot_vec(theta, n):
+    """
+    Rotate theta (in radian) about unit vector n
+    """
+    if theta:
+        n_norm = n / np.linalg.norm(n)
+        r_mat = R.from_rotvec(theta * np.array(n_norm)).as_matrix()
+    else:
+        r_mat = np.identity(3)
+    return np.array(r_mat)
 
 
 def gamma_fnc(x):
@@ -24,25 +41,7 @@ def gamma_fnc(x):
     return fwhm
 
 
-def rot_ang(theta, phi):
-    """
-    Rotate angle theta about x axis and phi about z axis, in degrees
-    """
-    rp_mat = R.from_euler("xz", [theta, phi], degrees=True).as_matrix()
-    # print(rp_mat)
-    return np.array(rp_mat)
-
-
-def rot_vec(theta, n):
-    """
-    Rotate theta (in radian) about unit vector n
-    """
-    if theta:
-        n_norm = n / np.linalg.norm(n)
-        r_mat = R.from_rotvec(theta * np.array(n_norm)).as_matrix()
-    else:
-        r_mat = np.identity(3)
-    return np.array(r_mat)
+import numpy as np
 
 
 def fold_slice(slice, err):

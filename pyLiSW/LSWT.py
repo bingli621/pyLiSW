@@ -120,7 +120,6 @@ class LSWT(QEspace):
             self.k_minus_tau = self.k - self.Sample.tau[1]
             self.l_minus_tau = self.l - self.Sample.tau[2]
 
-    
         self.sqw_prime_components = self.sqw_prime_components_calc()
         LSWT.sqw_components_print(self.sqw_prime_components)
         self.sqw_components, self.sqw_components_coeffs = self.sqw_components_calc()
@@ -841,23 +840,23 @@ class LSWT(QEspace):
                 )
         self.sqw = sqw
 
-    # def kin_lim_calc(self):
-    #     """
-    #     Calculate the kinematic boundary.
-    #     Assuming a 1 deg inaccessible region due to beam stop.
-    #     """
-    #     # h_bar**2/(2*m) = 2.072138
-    #     ki = np.sqrt(self.ei / 2.072138)
-    #     qx, qy, qz = self._q_mesh
-    #     q_sq = qx**2 + qy**2 + qz**2
-    #     beam_stop = 1
-    #     sintheta = np.sin(np.deg2rad(beam_stop))
-    #     rt = q_sq - ki**2 * sintheta
-    #     rt[rt < 0] = 0
-    #     lim = 2.072138 * (-q_sq + 2 * ki * np.sqrt(rt) + 2 * (ki * sintheta) ** 2)
-    #     return lim
+    def kin_lim_calc(self):
+        """
+        Calculate the kinematic boundary.
+        Assuming a 1 deg inaccessible region due to beam stop.
+        """
+        beam_stop = 1
+        # h_bar**2/(2*m) = 2.072138
+        ki = np.sqrt(self.ei / 2.072138)
+        qx, qy, qz = self.q_mesh
+        q_sq = qx**2 + qy**2 + qz**2
+        sintheta = np.sin(np.deg2rad(beam_stop))
+        rt = q_sq - ki**2 * sintheta
+        rt[rt < 0] = 0
+        lim = 2.072138 * (-q_sq + 2 * ki * np.sqrt(rt) + 2 * (ki * sintheta) ** 2)
+        return lim
 
-    def inten_calc(self):
+    def inten_calc(self, mask=None):
         """
         Calculation S(q,w)^{alpha, beta} * dipolar factor
         initialize gamma with energy resolution step size
@@ -881,16 +880,28 @@ class LSWT(QEspace):
                 inten[:, :, :, n] += (
                     self.dipolar_factors[idx, :, :, :] * self.sqw[idx, :, :, :, n]
                 )
-        self.inten = inten
 
-        # if self.ei is not None:
-        #     # kinematic limit
-        #     inten[Ek > self.kin_lim] = 0
+        if mask is None:
+            self.inten = inten
+        else:
+            n = self.Sample.n_dim * 2
+            mask_branches = []
+            for i in mask:
+                mask_branches.append(i)
+                mask_branches.append(n - i - 1)
+            self.inten = np.delete(inten, mask_branches, axis=3)
+            self.eng = np.delete(self.eng, mask_branches, axis=3)
+            self.gamma_mat = np.delete(self.gamma_mat, mask_branches, axis=3)
 
         amp = LSWT.chi_bose(
             self.elist, self.eng, self.inten, self.Sample.te, self.gamma_mat
         )
         self.amp = amp  # No resolution convolution
+
+        # kinematic limit
+        if self.ei is not None:
+            kin_lim = self.kin_lim_calc()
+            amp[self.elist[None, None, None, :] > kin_lim[:, :, :, None]] = None
 
         finish = time.perf_counter()
         print(
@@ -898,6 +909,15 @@ class LSWT(QEspace):
                 round(finish - start, 4)
             )
         )
+
+    def slice(
+        self, slice_ranges, plot_axes, aspect=None, PLOT=True, SIM=True, **kwargs
+    ):
+        x, y, slice, xlab, ylab, tit = super().slice(
+            slice_ranges, plot_axes, aspect, PLOT, SIM, **kwargs
+        )
+
+        return x, y, slice, xlab, ylab, tit
 
     ##############################################################################
     #     # --------------------------------------------------------------

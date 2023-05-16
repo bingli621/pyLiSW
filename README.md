@@ -1,2 +1,2 @@
 # pyLiSW
- linear spin wave
+ linear spin wave simulation using python
