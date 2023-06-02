@@ -5,7 +5,6 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent) + "/pyLiSW")
 from Atoms import Atoms
 from Bonds import Bonds
-
 from Sample import Sample
 from LSWT import LSWT
 import numpy as np
