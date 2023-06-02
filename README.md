@@ -1,2 +1,2 @@
 # pyLiSW
- linear spin wave simulation using python
+ Modeling and simulation of single-crystal spin waves data based on linear spin wave theory, using Python.
