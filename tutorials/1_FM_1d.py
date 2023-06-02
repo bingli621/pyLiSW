@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import sys
-
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent) + "/pyLiSW")
@@ -15,7 +14,6 @@ from matplotlib import pyplot as plt
 # 1d FM chain, spin along z
 # -------------------------------------------------------------
 if __name__ == "__main__":
-    axes = ["(H,0,0)", "(0,K,0)", "(0,0,L)"]
     # lattice parameters in Angstrom
     a = 3
     # determin the effective lattice parameters

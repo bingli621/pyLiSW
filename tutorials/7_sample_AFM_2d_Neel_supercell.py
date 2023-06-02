@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
-from Atoms import Atoms, Bonds
-from Atoms.Sample import Sample
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent) + "/pyLiSW")
+from Atoms import Atoms
+from Bonds import Bonds
+from Sample import Sample
 from LSWT import LSWT
+from utils import gamma_fnc
 from matplotlib import pyplot as plt
 import numpy as np
 
