@@ -38,9 +38,13 @@ if __name__ == "__main__":
     aniso = [[0, 0, 0], [0, 0, 0], [0, 0, -0.1]]
     # atom postions with effective lattice parameters
     atoms = [
-        Atoms(t=(0, 0, 0), ion="Mn2", spin=s1, aniso=aniso),
-        Atoms(t=(z, 0, 0), ion="Mn2", spin=s2, theta=np.pi, n=(0, 1, 0), aniso=aniso),
-        Atoms(t=(1 - z, 0, 0), ion="Mn2", spin=s2, aniso=aniso),
+        Atoms(t=(0.5, 0, 0), ion="Mn2", spin=s1, aniso=aniso),
+        Atoms(
+            t=(0.5 + z, 0, 0), ion="Mn2", spin=s2, theta=np.pi, n=(0, 1, 0), aniso=aniso
+        ),
+        Atoms(
+            t=(0.5 - z, 0, 0), ion="Mn2", spin=s2, theta=np.pi, n=(0, 1, 0), aniso=aniso
+        ),
     ]
     afm_chain_ABA.add_atoms(atoms)
     # -------------------------------------------------------------
@@ -50,7 +54,7 @@ if __name__ == "__main__":
     jMM = 0.25  # AFM
     bonds = [
         Bonds(afm_chain_ABA, 0, 1, j=jMS),
-        Bonds(afm_chain_ABA, 0, 2, r1=(-1, 0, 0), j=jMS),
+        Bonds(afm_chain_ABA, 0, 2, r1=(0, 0, 0), j=jMS),
         Bonds(afm_chain_ABA, 0, 0, r1=(1, 0, 0), j=jMM),
     ]
     afm_chain_ABA.add_bonds(bonds)

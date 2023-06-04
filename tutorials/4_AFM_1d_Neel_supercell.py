@@ -32,11 +32,12 @@ if __name__ == "__main__":
     # Add atoms
     # -------------------------------------------------------------
     s1 = 5 / 2
+    s2 = 5 / 2
     aniso = [[0, 0, 0], [0, 0, 0], [0, 0, -0.05]]
     # atom postions with effective lattice parameters
     atoms = [
         Atoms(t=(0, 0, 0), ion="Mn2", spin=s1, aniso=aniso),
-        Atoms(t=(0.5, 0, 0), ion="Mn2", spin=s1, aniso=aniso, theta=np.pi),
+        Atoms(t=(0.5, 0, 0), ion="Mn2", spin=s2, aniso=aniso, theta=np.pi),
     ]
     afm_chain.add_atoms(atoms)
     # -------------------------------------------------------------
