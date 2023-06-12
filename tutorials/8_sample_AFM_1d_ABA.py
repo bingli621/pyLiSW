@@ -69,7 +69,7 @@ if __name__ == "__main__":
         [0.00, 0.01, 0.01],
         [-20, 20, 0.01],
     )
-    sim_qespace = LSWT(qe_range, afm_chain_ABA, proj_axes, axes)
+    sim_qespace = LSWT(qe_range, afm_chain_ABA, proj_axes)
     sim_qespace.dispersion_calc()
     sim_qespace.plot_disp("x")
     # -------------------------------------------------------------

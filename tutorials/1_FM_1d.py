@@ -33,18 +33,13 @@ if __name__ == "__main__":
     s1 = 2
 
     # atom postions with effective lattice parameters
-    # atoms = [
-    #     Atoms(
-    #         t=(0, 0, 0), ion="Mn2", spin=s1, aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.2]]
-    #     ),
-    # ]
     atoms = [
         Atoms(
             t=(0, 0, 0),
             ion="Tb3",
             g=1.5,
             spin=s1,
-            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -2]],
+            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.1]],
         ),
     ]
     fm_chain.add_atoms(atoms)
@@ -68,8 +63,9 @@ if __name__ == "__main__":
         [-20, 20, 0.01],
     )
     sim_qespace = LSWT(qe_range, fm_chain)
-    # sim_qespace.dispersion_calc()
-    # sim_qespace.plot_disp("x")
+    # calculate dispersion relation
+    sim_qespace.dispersion_calc()
+    sim_qespace.plot_disp("x")
     # -------------------------------------------------------------
     # Simulate intensities
     # -------------------------------------------------------------
