@@ -18,27 +18,26 @@ if __name__ == "__main__":
     # lattice parameters in Angstrom
     a = 3
     # determin the effective lattice parameters
-    a_eff = a * np.sqrt(2)
-    b_eff = a * np.sqrt(2)
+    a_eff = a
+    b_eff = a
     c_eff = a
 
     # propagation vector
-    tau = (0, 0, 0)
+    tau = (1 / 2, 1 / 2, 0)
     # vector perpendicular to the plane of rotation
-    n = (0, 1, 0)
+    n = (-1, 1, 0)
     # temperature
-    te = 2
+    te = 20
 
-    afm_Neel = Sample((a_eff, b_eff, c_eff), tau, n, te)
+    afm_Neel = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------
     s1 = 5 / 2
-    aniso = [[0, 0, 0], [0, 0, 0], [0, 0, -0.001]]
+    aniso = [[0, 0, 0], [0, 0, 0], [0, 0, -0.1]]
     # atom postions with effective lattice parameters
     atoms = [
         Atoms(t=(0, 0, 0), ion="Mn2", spin=s1, aniso=aniso),
-        Atoms(t=(1 / 2, 1 / 2, 0), ion="Mn2", spin=s1, aniso=aniso, theta=np.pi),
     ]
     afm_Neel.add_atoms(atoms)
     # -------------------------------------------------------------
@@ -46,37 +45,37 @@ if __name__ == "__main__":
     # -------------------------------------------------------------
     j1 = 1  # AFM is positive, FM is negative
     bonds = [
-        # Bonds(self, 0, 1, j=j1),
-        Bonds(afm_Neel, 0, 1, j=j1),
-        Bonds(afm_Neel, 1, 0, r1=(0, 1, 0), j=j1),
-        Bonds(afm_Neel, 1, 0, r1=(1, 0, 0), j=j1),
-        Bonds(afm_Neel, 1, 0, r1=(1, 1, 0), j=j1),
+        Bonds(afm_Neel, 0, 0, r1=(1, 0, 0), j=j1),
+        Bonds(afm_Neel, 0, 0, r1=(0, 1, 0), j=j1),
     ]
     afm_Neel.add_bonds(bonds)
     # -------------------------------------------------------------
     # Simulate dispersion
     # -------------------------------------------------------------
     # High-symmetry directions
-    axes = ["(H,H,0)", "(-K,K,0)", "(0,0,L)"]
+    proj = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    axes = ["(H,0,0)", "(0,K,0)", "(0,0,L)"]
     qe_range = (
-        [-2, 4.01, 0.01],
-        [-0.00, 0.01, 0.01],
-        [-0.00, 0.01, 0.01],
+        [-2, 2.01, 0.01],
+        [0.00, 0.01, 0.01],
+        [0.00, 0.01, 0.01],
         [-20, 20, 0.1],
     )
-    sim_qespace = LSWT(qe_range, afm_Neel)
+    sim_qespace = LSWT(qe_range, afm_Neel, proj_axes=proj, axes=axes)
     sim_qespace.dispersion_calc()
     sim_qespace.plot_disp("x")
     # -------------------------------------------------------------
-    qe_range2 = (
-        [0.5, 0.51, 0.01],
-        [-2, 2.01, 0.01],
-        [-0.00, 0.01, 0.01],
-        [-20, 20, 0.1],
-    )
-    sim_qespace2 = LSWT(qe_range2, afm_Neel)
-    sim_qespace2.dispersion_calc()
-    sim_qespace2.plot_disp("y")
+    # proj2 = [[1, 1, 0], [-1, 1, 0], [0, 0, 1]]
+    # axes2 = ["(H,H,0)", "(-K,K,0)", "(0,0,L)"]
+    # qe_range2 = (
+    #     [-2, 2.01, 0.01],
+    #     [-0.00, 0.01, 0.01],
+    #     [-0.00, 0.01, 0.01],
+    #     [-20, 20, 0.1],
+    # )
+    # sim_qespace2 = LSWT(qe_range2, afm_Neel, proj_axes=proj2, axes=axes2)
+    # sim_qespace2.dispersion_calc()
+    # sim_qespace2.plot_disp("x")
     # -------------------------------------------------------------
     # Simulate intensities
     # -------------------------------------------------------------
@@ -87,32 +86,32 @@ if __name__ == "__main__":
         [-0.00, 0.01],
         [-20, 20, 0.1],
     )
-    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=3)
+    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=5)
     # -------------------------------------------------------------
-    sim_qespace2.inten_calc()
-    slice_range2 = (
-        [0.5, 0.51],
-        [-2, 2.01, 0.01],
-        [-0.00, 0.01],
-        [-20, 20, 0.1],
-    )
-    sim_qespace2.slice(slice_range2, plot_axes=(1, 3), SIM=True, vmin=0, vmax=3)
+    # sim_qespace2.inten_calc()
+    # slice_range2 = (
+    #     [-2, 4.01, 0.01],
+    #     [-0.00, 0.01],
+    #     [-0.00, 0.01],
+    #     [-20, 20, 0.1],
+    # )
+    # sim_qespace2.slice(slice_range2, plot_axes=(0, 3), SIM=True, vmin=0, vmax=3)
     # -------------------------------------------------------------
-    qe_range = (
+    qe_range3 = (
         [-1, 1.01, 0.01],
         [-1, 1.01, 0.01],
         [-0.00, 0.01, 0.01],
         [-20, 20, 0.1],
     )
-    sim_qespace = LSWT(qe_range, afm_Neel)
-    sim_qespace.inten_calc()
+    sim_qespace3 = LSWT(qe_range3, afm_Neel)
+    sim_qespace3.inten_calc()
 
-    slice_range = (
+    slice_range3 = (
         [-1, 1.01, 0.01],
         [-1, 1.01, 0.01],
         [-0.00, 0.01],
         [5, 6],
     )
-    sim_qespace.slice(slice_range, plot_axes=(0, 1), SIM=True, vmin=0, vmax=3)
+    sim_qespace3.slice(slice_range3, plot_axes=(0, 1), SIM=True, vmin=0, vmax=5)
 
     plt.show()

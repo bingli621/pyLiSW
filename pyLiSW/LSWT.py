@@ -379,17 +379,24 @@ class LSWT(QEspace):
             #     bose[None, None, None, :]
             # -----------------------------------------------------------------
             # ------ clean the tails if intensity is less than 0.5% of max --------
-            CUT_OFF_PERCENT = 0.005
+            CUT_OFF_PERCENT = 0.001
             chi_bose_cut_off = CUT_OFF_PERCENT * np.amax(chi_bose_i, axis=-1)
             chi_bose_i[chi_bose_i < chi_bose_cut_off[:, :, :, None]] = 0
             # ------------------------------------------------------------
-            chi_bose_sum = np.sum(chi_bose_i[:, :, :, en > 0], axis=-1)
-            # chi_bose_sum = np.sum(chi_bose_i, axis=-1)
+            # chi_bose_sum = np.sum(chi_bose_i[:, :, :, en > 0], axis=-1)
+            # # chi_bose_sum = np.sum(chi_bose_i, axis=-1)
+            # chi_bose_norm = chi_bose_i / chi_bose_sum[:, :, :, None] / en_step
+            # # chi_bose += chi_bose_norm * inten_i[:, :, :, None]
+            # chi_bose += (
+            #     chi_bose_norm
+            #     * (inten_i * (LSWT.bose_factor_calc(eng_i, te)+1))[:, :, :, None]
+            # )
+            # ---------------Normalized to 2*n_B + 1 ------------------------------
+            chi_bose_sum = np.sum(chi_bose_i, axis=-1)
             chi_bose_norm = chi_bose_i / chi_bose_sum[:, :, :, None] / en_step
-            # chi_bose += chi_bose_norm * inten_i[:, :, :, None]
             chi_bose += (
                 chi_bose_norm
-                * (inten_i * LSWT.bose_factor_calc(eng_i, te))[:, :, :, None]
+                * (inten_i * (LSWT.bose_factor_calc(eng_i, te) * 2 + 1))[:, :, :, None]
             )
         return chi_bose
 
