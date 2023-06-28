@@ -13,7 +13,7 @@ class Sample(object):
     a_eff, b_eff, c_eff     Effective lattice constats in Cartesian coordinate
     tau                     Propagation vector, in units of 2 pi/lat_param_eff
     te                      temperature, for Bose factor calculation
-    n                       axis of rotation of R
+    n_R                     axis of rotation of R, for global rotation
     n_dim                   n_atoms, dimension of the Hamiltonian is 2 * n_dim
     atoms                   unique magnetic atoms
     bonds                   magnetic interaction J, 3 by 3 matrix
@@ -36,7 +36,7 @@ class Sample(object):
         self,
         lattice_parameters=(1, 1, 1),
         tau=(0, 0, 0),
-        n=(0, 1, 0),
+        n_R=(0, 1, 0),
         te=2,
         gamma_fnc=None,
     ):
@@ -46,18 +46,18 @@ class Sample(object):
         self.c_eff = c
 
         self.tau = tau  # propagation vector
-        self.n = n  # vector perpendicular to the plane of rotation
+        self.n_R = n_R  # vector perpendicular to the plane of rotation
+        self.n_R = self.n_R / np.linalg.norm(self.n_R)
         self.te = te  # temperature
 
-        self.n = self.n / np.linalg.norm(self.n)
         mat_nx = np.array(
             [
-                [0, -self.n[2], self.n[1]],
-                [self.n[2], 0, -self.n[0]],
-                [-self.n[1], self.n[0], 0],
+                [0, -self.n_R[2], self.n_R[1]],
+                [self.n_R[2], 0, -self.n_R[0]],
+                [-self.n_R[1], self.n_R[0], 0],
             ]
         )
-        self.mat_R2 = np.outer(self.n, self.n)
+        self.mat_R2 = np.outer(self.n_R, self.n_R)
         self.mat_R1 = (np.eye(3) - 1j * mat_nx - self.mat_R2) / 2
 
         self.atoms = None

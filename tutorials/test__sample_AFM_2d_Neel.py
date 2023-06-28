@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # propagation vector
     tau = (1 / 2, 1 / 2, 0)
     # vector perpendicular to the plane of rotation
-    n_R = (-1, 1, 0)
+    n_R = (0, 1, 0)
     # temperature
     te = 20
 
@@ -52,66 +52,21 @@ if __name__ == "__main__":
     # -------------------------------------------------------------
     # Simulate dispersion
     # -------------------------------------------------------------
-    # High-symmetry directions
-    proj = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    axes = ["(H,0,0)", "(0,K,0)", "(0,0,L)"]
-    qe_range = (
-        [-2, 2.01, 0.01],
-        [0.00 + 0.5, 0.01 + 0.5, 0.01],
-        [0.00, 0.01, 0.01],
-        [-20, 20, 0.1],
-    )
-    sim_qespace = LSWT(qe_range, afm_Neel, proj_axes=proj, axes=axes)
-    sim_qespace.dispersion_calc()
-    sim_qespace.plot_disp("x")
-    # -------------------------------------------------------------
-    proj2 = [[1, 1, 0], [-1, 1, 0], [0, 0, 1]]
-    axes2 = ["(H,H,0)", "(-K,K,0)", "(0,0,L)"]
-    qe_range2 = (
-        [-2, 2.01, 0.01],
-        [-0.00, 0.01, 0.01],
-        [-0.00, 0.01, 0.01],
-        [-20, 20, 0.1],
-    )
-    sim_qespace2 = LSWT(qe_range2, afm_Neel, proj_axes=proj2, axes=axes2)
-    sim_qespace2.dispersion_calc()
-    sim_qespace2.plot_disp("x")
-    # -------------------------------------------------------------
-    # Simulate intensities
-    # -------------------------------------------------------------
-    sim_qespace.inten_calc()
-    slice_range = (
-        [-2, 4.01, 0.01],
-        [-0.00 + 0.5, 0.01 + 0.5],
-        [-0.00, 0.01],
-        [-20, 20, 0.1],
-    )
-    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=5)
-    # -------------------------------------------------------------
-    sim_qespace2.inten_calc()
-    slice_range2 = (
-        [-2, 4.01, 0.01],
-        [-0.00, 0.01],
-        [-0.00, 0.01],
-        [-20, 20, 0.1],
-    )
-    sim_qespace2.slice(slice_range2, plot_axes=(0, 3), SIM=True, vmin=0, vmax=3)
-    # -------------------------------------------------------------
     qe_range3 = (
-        [-1, 1.01, 0.01],
-        [-1, 1.01, 0.01],
-        [-0.00, 0.01, 0.01],
+        [-1, 1.01, 0.1],
+        [-1, 1.01, 0.1],
+        [0.00, 0.01, 0.01],
         [-20, 20, 0.1],
     )
     sim_qespace3 = LSWT(qe_range3, afm_Neel)
     sim_qespace3.inten_calc()
 
     slice_range3 = (
-        [-1, 1.01, 0.01],
-        [-1, 1.01, 0.01],
+        [-1, 1.01, 0.1],
+        [-1, 1.01, 0.1],
         [-0.00, 0.01],
         [5, 6],
     )
-    sim_qespace3.slice(slice_range3, plot_axes=(0, 1), SIM=True, vmin=0, vmax=5)
+    sim_qespace3.slice(slice_range3, plot_axes=(0, 1), vmin=0, vmax=5)
 
     plt.show()

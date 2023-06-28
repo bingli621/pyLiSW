@@ -38,7 +38,7 @@ class Atoms(object):
         g=2,
         spin=1,
         theta=0,
-        n=(0, 1, 0),
+        n_Rp=(0, 1, 0),
         aniso=[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
     ):
         """
@@ -61,7 +61,7 @@ class Atoms(object):
         self.s = np.linalg.norm(spin)
         self.spin_pp = np.array([0, 0, spin]).T
 
-        rp_mat = rot_vec(theta, n)  # identity matrices by default
+        rp_mat = rot_vec(theta, n_Rp)  # identity matrices by default
         self.u = np.round([rp_mat[:, 0] + 1j * rp_mat[:, 1]], 3).T
         self.v = np.round([rp_mat[:, 2]], 3).T
         self.spin_p = np.round(rp_mat @ self.spin_pp, 3).T
@@ -112,6 +112,16 @@ class Atoms(object):
         #     ff[s_sq > s_sq[idx_of_zero]] = 0
 
         return ff
+
+    @staticmethod
+    def exp_ikt(k_mesh, t):
+        """
+        return Fourier tansformation of exp(i*k*t)
+        """
+        kx, ky, kz = k_mesh
+        tx, ty, tz = t
+        exp_ikt = np.exp(1j * (kx * tx + ky * ty + kz * tz))
+        return exp_ikt
 
 
 # testing

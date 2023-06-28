@@ -40,10 +40,20 @@ if __name__ == "__main__":
     atoms = [
         Atoms(t=(0.5, 0, 0), ion="Mn2", spin=s1, aniso=aniso),
         Atoms(
-            t=(0.5 + z, 0, 0), ion="Mn2", spin=s2, theta=np.pi, n=(0, 1, 0), aniso=aniso
+            t=(0.5 + z, 0, 0),
+            ion="Mn2",
+            spin=s2,
+            theta=np.pi,
+            n_Rp=(0, 1, 0),
+            aniso=aniso,
         ),
         Atoms(
-            t=(0.5 - z, 0, 0), ion="Mn2", spin=s2, theta=np.pi, n=(0, 1, 0), aniso=aniso
+            t=(0.5 - z, 0, 0),
+            ion="Mn2",
+            spin=s2,
+            theta=np.pi,
+            n_Rp=(0, 1, 0),
+            aniso=aniso,
         ),
     ]
     afm_chain_ABA.add_atoms(atoms)
@@ -82,7 +92,7 @@ if __name__ == "__main__":
         [-15, 15.01, 0.01],
     )
     sim_qespace.inten_calc()
-    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=1)
+    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=2)
     # -------------------------------------------------------------
     # Making cuts
     # -------------------------------------------------------------

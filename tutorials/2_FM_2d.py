@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # vector perpendicular to the plane of rotation
     n = (0, 1, 0)
     # temperature
-    te = 200
+    te = 2
     fm_chain = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
     # -------------------------------------------------------------
     # Add atoms
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         [-20, 20.01, 0.01],
     )
 
-    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=0.5)
+    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=2)
     # -------------------------------------------------------------
     # Making cuts
     # -------------------------------------------------------------

@@ -44,7 +44,7 @@ if __name__ == "__main__":
             ion="Mn2",
             spin=s2,
             theta=np.pi,
-            n=(0, 1, 0),
+            n_Rp=(0, 1, 0),
             aniso=aniso,
         ),
         Atoms(
@@ -52,7 +52,7 @@ if __name__ == "__main__":
             ion="Mn2",
             spin=s2,
             theta=np.pi,
-            n=(0, 1, 0),
+            n_Rp=(0, 1, 0),
             aniso=aniso,
         ),
         Atoms(
@@ -61,7 +61,7 @@ if __name__ == "__main__":
             spin=s1,
             aniso=aniso,
             theta=np.pi,
-            n=(0, 1, 0),
+            n_Rp=(0, 1, 0),
         ),
         Atoms(t=(0.75 + z / 2, 0, 0), ion="Mn2", spin=s2, aniso=aniso),
         Atoms(t=(0.75 - z, 0, 0), ion="Mn2", spin=s2, aniso=aniso),

@@ -52,13 +52,15 @@ if __name__ == "__main__":
     # -------------------------------------------------------------
     # Simulate dispersion
     # -------------------------------------------------------------
+    proj = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    axes = ["(H,0,0)", "(0,K,0)", "(0,0,L)"]
     qe_range = (
         [0, 3.02, 0.02],
         [0.00, 0.01, 0.01],
         [0.00, 0.01, 0.01],
         [-20, 20, 0.01],
     )
-    sim_qespace = LSWT(qe_range, afm_chain)
+    sim_qespace = LSWT(qe_range, afm_chain, proj_axes=proj, axes=axes)
     sim_qespace.dispersion_calc()
     sim_qespace.plot_disp("x")
     # -------------------------------------------------------------
@@ -71,7 +73,7 @@ if __name__ == "__main__":
         [-6, 6.01, 0.01],
     )
     sim_qespace.inten_calc()
-    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=5)
+    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=20)
     # -------------------------------------------------------------
     # Making cuts
     # -------------------------------------------------------------

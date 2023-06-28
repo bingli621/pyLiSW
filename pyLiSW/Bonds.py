@@ -16,6 +16,7 @@ class Bonds(object):
     s0                          spin size of first atom
     s1                          spin size of second atom
     dij                         neighboring distance, in units of eff. latt. params.
+    dmn                         neighboring unit cell distance
     r_mn                        rotation matrix Rn-m
     j                           strength of magnetic interaction
                                 can be a scalar or a 3 by 3 matrix
@@ -32,7 +33,8 @@ class Bonds(object):
         self.r1 = np.array(r1)
         self.s0 = self.atom0.s
         self.s1 = self.atom1.s
-        self.dij = np.round(self.atom1.t - self.atom0.t + r1 - r0, 3)
+        self.dij = np.round(self.atom1.t - self.atom0.t + self.r1 - self.r0, 3)
+        self.dmn = np.round(self.r1 - self.r0, 3)
 
         if np.array(j).ndim:
             self.j = j
@@ -40,5 +42,4 @@ class Bonds(object):
             self.j = j * np.eye(3)
 
         tau = 2 * np.pi * np.array(Sample.tau)
-        dmn = np.array(self.r1 - self.r0)
-        self.r_mn = np.round(rot_vec(np.dot(tau, dmn), Sample.n), 3)
+        self.r_mn = np.round(rot_vec(np.dot(tau, self.dmn), Sample.n_R), 3)
