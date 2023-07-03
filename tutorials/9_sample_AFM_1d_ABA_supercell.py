@@ -64,7 +64,7 @@ if __name__ == "__main__":
             n_Rp=(0, 1, 0),
         ),
         Atoms(t=(0.75 + z / 2, 0, 0), ion="Mn2", spin=s2, aniso=aniso),
-        Atoms(t=(0.75 - z, 0, 0), ion="Mn2", spin=s2, aniso=aniso),
+        Atoms(t=(0.75 - z / 2, 0, 0), ion="Mn2", spin=s2, aniso=aniso),
     ]
     afm_chain_ABA.add_atoms(atoms)
     # -------------------------------------------------------------
