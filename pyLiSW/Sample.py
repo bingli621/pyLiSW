@@ -91,7 +91,7 @@ class Sample(object):
         to_print = []
         for idx, Bond in enumerate(Bonds):
             if np.array(Bond.j).ndim:
-                j = Bond.j.tolist()
+                j = np.array(Bond.j).tolist()
             else:
                 j = Bond.j
             d = np.round(

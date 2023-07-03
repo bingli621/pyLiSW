@@ -26,7 +26,7 @@ if __name__ == "__main__":
     n = (0, 1, 0)
     # temperature
     te = 2
-    fm_j1j2_chain = Sample((a_eff, b_eff, c_eff), tau, n, te)
+    fm_j1j2_chain = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         [0, 3.02, 0.02],
         [0.00, 0.01],
         [0.00, 0.01],
-        [0, 15.01, 0.01],
+        [-15, 15.01, 0.01],
     )
     sim_qespace.inten_calc()
     sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=1)

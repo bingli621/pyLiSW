@@ -114,6 +114,6 @@ if __name__ == "__main__":
         [-0.00, 0.01],
         [5, 6],
     )
-    sim_qespace.slice(slice_range, plot_axes=(0, 1), SIM=True, vmin=0, vmax=3)
+    sim_qespace.slice(slice_range, plot_axes=(0, 1), SIM=True, vmin=0, vmax=5)
 
     plt.show()

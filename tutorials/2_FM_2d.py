@@ -54,15 +54,17 @@ if __name__ == "__main__":
     fm_chain.add_bonds(bonds)
 
     # -------------------------------------------------------------
-    # Simulate dispersion
+    # Simulate dispersion along (1,0,0)
     # -------------------------------------------------------------
+    proj_axes = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    axes = ["(H,0,0)", "(0,K,0)", "(0,0,L)"]
     qe_range = (
         [0, 3.01, 0.01],
         [0.00, 0.01, 0.01],
         [0.00, 0.01, 0.01],
         [-20, 20, 0.01],
     )
-    sim_qespace = LSWT(qe_range, fm_chain)
+    sim_qespace = LSWT(qe_range, fm_chain, proj_axes=proj_axes, axes=axes)
     # calculate dispersion relation
     sim_qespace.dispersion_calc()
     sim_qespace.plot_disp("x")
@@ -78,7 +80,38 @@ if __name__ == "__main__":
         [-20, 20.01, 0.01],
     )
 
-    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=2)
+    sim_qespace.slice(slice_range, plot_axes=(0, 3), vmin=0, vmax=2)
+
+    # -------------------------------------------------------------
+    # Simulate dispersion along (110)
+    # -------------------------------------------------------------
+    proj_axes2 = [[1, 1, 0], [-1, 1, 0], [0, 0, 1]]
+    axes2 = ["(H,H,0)", "(-K,K,0)", "(0,0,L)"]
+    qe_range2 = (
+        [0, 3.01, 0.01],
+        [0.00, 0.01, 0.01],
+        [0.00, 0.01, 0.01],
+        [-20, 20, 0.01],
+    )
+    sim_qespace2 = LSWT(qe_range2, fm_chain, proj_axes=proj_axes2, axes=axes2)
+    # calculate dispersion relation
+    sim_qespace2.dispersion_calc()
+    sim_qespace2.plot_disp("x")
+
+    # -------------------------------------------------------------
+    # Simulate intensities
+    # -------------------------------------------------------------
+    sim_qespace2.inten_calc()
+
+    slice_range2 = (
+        [0, 3.01, 0.01],
+        [0.00, 0.01],
+        [0.00, 0.01],
+        [-20, 20.01, 0.01],
+    )
+
+    sim_qespace2.slice(slice_range2, plot_axes=(0, 3), vmin=0, vmax=2)
+
     # -------------------------------------------------------------
     # Making cuts
     # -------------------------------------------------------------

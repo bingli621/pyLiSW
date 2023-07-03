@@ -27,7 +27,7 @@ if __name__ == "__main__":
     n = (0, 1, 0)
     # temperature
     te = 20
-    afm_chain = Sample((a_eff, b_eff, c_eff), tau, n, te)
+    afm_chain = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------
@@ -37,7 +37,9 @@ if __name__ == "__main__":
     # atom postions with effective lattice parameters
     atoms = [
         Atoms(t=(0, 0, 0), ion="Mn2", spin=s1, aniso=aniso),
-        Atoms(t=(0.5, 0, 0), ion="Mn2", spin=s2, aniso=aniso, theta=np.pi),
+        Atoms(
+            t=(0.5, 0, 0), ion="Mn2", spin=s2, aniso=aniso, theta=np.pi, n_Rp=(0, 1, 0)
+        ),
     ]
     afm_chain.add_atoms(atoms)
     # -------------------------------------------------------------
@@ -72,7 +74,7 @@ if __name__ == "__main__":
         [0.00, 0.01],
         [-6, 6.01, 0.01],
     )
-    sim_qespace.inten_calc()
+    sim_qespace.inten_calc(mask=None)
     sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=20)
     # -------------------------------------------------------------
     # Making cuts

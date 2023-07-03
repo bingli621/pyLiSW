@@ -26,7 +26,7 @@ if __name__ == "__main__":
     n = (0, 1, 0)
     # temperature
     te = 20
-    afm_chain = Sample((a_eff, b_eff, c_eff), tau, n, te)
+    afm_chain = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------

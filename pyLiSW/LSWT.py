@@ -70,7 +70,7 @@ class LSWT(QEspace):
     -------------------------------------------------------------------------
     sqw_components_print    print the components of S'(q,w)^{alpha, beta}
                             that contributes to the INS intensity
-    mat_g                   Hamiltonian
+    mat_h                   Hamiltonian in reciprocal space
     ham_solver              Diagonalization of the Hamiltonian
     damping_factor_init
     damping_factor_mapping
@@ -131,11 +131,7 @@ class LSWT(QEspace):
         self.sqw_components_update()
 
         self.mag_form_factors = self.mag_form_factor_calc(FORM_FACTOR=True)
-
-        self.bose_factor = LSWT.bose_factor_calc(
-            self.elist, self.Sample.te, BOSE_FACTOR=True
-        )
-
+        self.BOSE_FACTOR = True
         self.gamma_list = None  # in energy
         self.processes = 4  # multiprocessing
         self.ei = ei
@@ -158,7 +154,7 @@ class LSWT(QEspace):
         return bose
 
     @staticmethod
-    def mat_g(hkl, Sample):
+    def mat_h(hkl, Sample):
         """
         build Hamiltonian matrix g
         written as a static method, for parallelization
@@ -167,11 +163,12 @@ class LSWT(QEspace):
         kx, ky, kz = np.array(list(zip(*hkl)))
         n_dim = Sample.n_dim
         k_dim = np.shape(kx)[0]
-        mat_A = np.zeros(shape=(k_dim, n_dim, n_dim), dtype="complex_")
-        mat_B = np.zeros(shape=(k_dim, n_dim, n_dim), dtype="complex_")
-        mat_mA = np.zeros(shape=(k_dim, n_dim, n_dim), dtype="complex_")
-        mat_mB = np.zeros(shape=(k_dim, n_dim, n_dim), dtype="complex_")
-        mat_C = np.zeros(shape=(k_dim, n_dim, n_dim), dtype="complex_")
+        sp = (k_dim, n_dim, n_dim)
+        mat_A = np.zeros(shape=sp, dtype="complex_")
+        mat_B = np.zeros(shape=sp, dtype="complex_")
+        mat_mA = np.zeros(shape=sp, dtype="complex_")
+        mat_mB = np.zeros(shape=sp, dtype="complex_")
+        mat_C = np.zeros(shape=sp, dtype="complex_")
 
         for Bond in Sample.Bonds:
             idx0, idx1 = Bond.idx
@@ -210,14 +207,14 @@ class LSWT(QEspace):
             else:  # no anisotropy
                 pass
 
-        gmat = np.block(
-            [[mat_A - mat_C, mat_B], [-np.conj(mat_mB), -np.conj(mat_mA) + mat_C]]
+        hmat = np.block(
+            [[mat_A - mat_C, mat_B], [np.conj(mat_mB), np.conj(mat_mA) - mat_C]]
         )
 
-        return gmat
+        return hmat
 
     @staticmethod
-    def ham_solver(gmat):
+    def ham_solver(hmat):
         """
         find eigenvalues and eigenvectors of the Hamiltonian matrix g
         written as a static method, for parallelization
@@ -226,59 +223,58 @@ class LSWT(QEspace):
         ZERO_ENERGY = False
         evals_k = []
         evecs_k = []
-        k_dim = np.shape(gmat)[0]
-        n_ion = int(np.shape(gmat)[1] / 2)
+        k_dim = np.shape(hmat)[0]
+        n_ion = int(np.shape(hmat)[1] / 2)
+        one_mat = np.eye(n_ion)
+        # zero_mat = np.zeros_like(one_mat)
+        gmat = np.diag(np.array([1] * n_ion + [-1] * n_ion))
+        epsilon = 1e-2
+        delta_mat = np.diag(np.array([1] * n_ion + [1] * n_ion)) * epsilon
+
         for i in range(k_dim):
-            evals, evecs = np.linalg.eig(gmat[i, :, :])
-            # discarding the imaginary part
-            evals = np.round(evals.real, 8)
+            hmat_i = hmat[i, :, :]
+            # check if all eigenvalues are positive
+            evals = np.linalg.eigvals(gmat @ hmat_i)
+            evals = np.round(evals.real, 4)  # discarding the imaginary part
+
             if not np.all(evals):  # zero energies
                 ZERO_ENERGY = True
-                epsilon = 1e-3
-                epsilon_mat = epsilon * np.eye(n_ion)
-                zero_mat = np.zeros_like(epsilon_mat)
-                delta = np.block(
-                    [
-                        [epsilon_mat, zero_mat],
-                        [zero_mat, -epsilon_mat],
-                    ]
-                )
-                evals, evecs = np.linalg.eig(gmat[i, :, :] + delta)
-
-            evecs_r = np.round(evecs.real, 8) + np.round(evecs.imag, 8) * 1j
-            # sort eigenvalues and eigenvectors
+                hmat[i, :, :] += delta_mat
+            # -------------------- Cholesky decomposition ------------------------
+            kmat_d = np.linalg.cholesky(hmat_i)
+            kmat = kmat_d.T.conj()
+            kgkdmat = kmat @ gmat @ kmat_d
+            evals, evecs = np.linalg.eigh(kgkdmat)  # complex hermitian matrix
+            evals_r = np.round(evals.real, 4)
+            # evecs_r = np.round(evecs.real, 8) + np.round(evecs.imag, 8) * 1j
+            # --------------- sort eigenvalues and eigenvectors --------------
             idx = evals.argsort()[::-1]
-            evals_s = evals[idx]
-            evecs_s = evecs_r[:, idx]
+            evals_s = evals_r[idx]
             evals_k.append(evals_s)
 
-            # normalize eigenvectors
-            # norm = []
-            # for i in range(n_ion * 2):
-            #     norm_sum = 0
-            #     for j in range(n_ion):
-            #         norm_sum += (
-            #             np.conjugate(evecs_s[j, i]) * evecs_s[j, i]
-            #             - np.conjugate(evecs_s[j + n_ion, i]) * evecs_s[j + n_ion, i]
-            #         )
-            #     if i >= n_ion:
-            #         norm.append(-norm_sum)
-            #     else:
-            #         norm.append(norm_sum)
+            umat = evecs[:, idx]
+            lmat = np.round(umat.T.conj() @ kgkdmat @ umat, 4)
+            emat = np.round((gmat @ lmat).real, 4)
+            for i in range(n_ion * 2):
+                for j in range(n_ion * 2):
+                    if not i == j:
+                        if np.abs(emat[i, j]) > 1e-6:
+                            print("Warning: eigenvectors non-orthogonal!")
+                            # print(emat)
+                            # print(umat[:, 0])
+                        else:  # zero non-diagonal
+                            pass
+                    else:  # diagonal
+                        pass
 
-            # evecs_k.append(evecs_s / np.sqrt(norm))
-
-            # normalize eigenvectors
-            matT = evecs_s
-            mat_g = np.diag(np.array([1] * n_ion + [-1] * n_ion))
-            matTd = np.transpose(np.conj(matT))
-            norms = matTd @ mat_g @ matT
-            for i in range(n_ion):
-                evecs_s[:, i] = evecs_s[:, i] / np.sqrt(norms[i, i])
-                evecs_s[:, -1 - i] = evecs_s[:, -1 - i] / np.sqrt(
-                    -norms[-1 - i, -1 - i]
-                )
-            evecs_k.append(evecs_s)
+            # --------------- normalize eigenvectors ---------------
+            matT = np.linalg.inv(kmat) @ umat @ np.sqrt(emat)
+            # matTd = matT.T.conj()
+            # norms = (matTd @ gmat @ matT).round(8)
+            # for i in range(n_ion):
+            #     matT[:, i] = matT[:, i] / np.sqrt(norms[i, i])
+            #     matT[:, -1 - i] = matT[:, -1 - i] / np.sqrt(-norms[-1 - i, -1 - i])
+            evecs_k.append(matT)
 
         if ZERO_ENERGY:
             print(
@@ -393,7 +389,7 @@ class LSWT(QEspace):
     #     return result
 
     @staticmethod
-    def chi_bose(en, engs, intens, te, gamma):
+    def chi_bose(en, engs, intens, te, gamma, BOSE_FACTOR=True):
         """
         chi(energy) as the under-damped harmonic oscillator (UDHO)
         chi times bose factor has the integrated intensity of S(q,w)
@@ -402,22 +398,36 @@ class LSWT(QEspace):
         chi_bose = np.zeros((qx, qy, qz) + np.shape(en))
         n_ion = int(n_dim / 2)
         en_step = np.mean(np.diff(en))
-        bose = LSWT.bose_factor_calc(en, te)
+        bose = LSWT.bose_factor_calc(en, te, BOSE_FACTOR=BOSE_FACTOR)
 
-        for i in range(n_ion):  # go through positive energies only
-            eng_i = engs[:, :, :, i]
-            gamma_i = gamma[:, :, :, i]
-            inten_i = intens[:, :, :, i]
-            if np.any(np.abs(eng_i + engs[:, :, :, 2 * n_ion - i - 1]) > 1e-6):
+        # check degeneracay
+        _, dgs = np.unique(engs, axis=3, return_counts=True)
+        dg = np.min(dgs)
+        if dg > 1:
+            print(QEspace.divider_str)
+            print("A {}-fold degeneracy is detected.".format(dg))
+            print(QEspace.divider_str)
+
+        for i in range(int(n_ion / dg)):  # go through positive energies only
+            eng_i = engs[:, :, :, i * dg]
+            gamma_i = gamma[:, :, :, i * dg]
+            inten_i_pos = np.zeros_like(intens[:, :, :, i * dg])
+            inten_i_neg = np.zeros_like(intens[:, :, :, i * dg])
+            for j in range(dg):  # add intensity of all degenerate bands
+                inten_i_pos += intens[:, :, :, i * dg + j]
+                inten_i_neg += intens[:, :, :, 2 * n_ion - 1 - i * dg - j]
+
+            if np.any(np.abs(eng_i + engs[:, :, :, 2 * n_ion - i * dg - 1]) > 1e-6):
                 print(
                     "Energies of energy-gain and -loss sides are not the same, "
                     + "we may have a problem."
                 )
-            if np.any(np.abs(inten_i - intens[:, :, :, 2 * n_ion - i - 1]) > 1e-6):
+            if np.any(np.abs(inten_i_pos - inten_i_neg) > 1e-6):
                 print(
-                    "Intensities of energy-gain and -loss sides are not the same, "
-                    + "we may have a problem if bands are non-degenerate."
+                    "Intensity of energy-gain and -loss sides are not the same, "
+                    + "we may have a problem trlated to the band-degeneracy."
                 )
+
             chi_bose_i = (
                 en[None, None, None, :]
                 * gamma_i[:, :, :, None]
@@ -450,7 +460,9 @@ class LSWT(QEspace):
             chi_bose_norm = chi_bose_i / chi_bose_sum[:, :, :, None] / en_step
             chi_bose += (
                 chi_bose_norm
-                * (inten_i * (LSWT.bose_factor_calc(eng_i, te) * 2 + 1))[:, :, :, None]
+                * (inten_i_pos * (LSWT.bose_factor_calc(eng_i, te) * 2 + 1))[
+                    :, :, :, None
+                ]
             )
         return chi_bose
 
@@ -499,12 +511,13 @@ class LSWT(QEspace):
         sqw_components = []
         for i in range(3):
             for j in range(3):
-                # if np.any(self.mat_YZVW(i, j).real) or np.any(self.mat_YZVW(i, j).imag):
-                if self.Sample.tau == (0, 0, 0):  # FM
-                    sqw_components.append([0, i, j])
-                else:  # AFM
-                    for tau in range(3):
-                        sqw_components.append([tau, i, j])
+                if np.any(self.mat_YZVW(i, j).real) or np.any(self.mat_YZVW(i, j).imag):
+                    if self.Sample.tau == (0, 0, 0):  # FM
+                        sqw_components.append([0, i, j])
+                    else:  # AFM
+                        for tau in range(3):
+                            sqw_components.append([tau, i, j])
+
                 # if i == j: # Sij real, keep real cooefficients
                 #     if np.any(self.mat_YZVW(i, j).real):
                 #         if self.Sample.tau == (0, 0, 0):  # FM
@@ -520,6 +533,7 @@ class LSWT(QEspace):
                 #         else:  # AFM
                 #             for tau in range(3):
                 #                 sqw_components.append([tau, i, j])
+
         return sqw_components
 
     def sqw_components_calc(self):
@@ -629,35 +643,35 @@ class LSWT(QEspace):
                 np.ravel(self.k_minus_tau),
                 np.ravel(self.l_minus_tau),
             )
-            # mat_g_plus_tau = LSWT.mat_g(hkl_minus_tau, self.Sample)
-            # mat_g_minus_tau = LSWT.mat_g(hkl_plus_tau, self.Sample)
-            mat_g_plus_tau = LSWT.mat_g(hkl_plus_tau, self.Sample)
-            mat_g_minus_tau = LSWT.mat_g(hkl_minus_tau, self.Sample)
+            # mat_h_plus_tau = LSWT.mat_h(hkl_minus_tau, self.Sample)
+            # mat_h_minus_tau = LSWT.mat_h(hkl_plus_tau, self.Sample)
+            mat_h_plus_tau = LSWT.mat_h(hkl_plus_tau, self.Sample)
+            mat_h_minus_tau = LSWT.mat_h(hkl_minus_tau, self.Sample)
 
-        mat_g = LSWT.mat_g(hkl, self.Sample)
+        mat_h = LSWT.mat_h(hkl, self.Sample)
 
         if self.processes > 1:  # multiprocessing
             with concurrent.futures.ProcessPoolExecutor() as executor:
                 if not self.Sample.tau == (0, 0, 0):  # AFM
-                    mat_g_plus_tau_split = np.array_split(
-                        mat_g_plus_tau, self.processes
+                    mat_h_plus_tau_split = np.array_split(
+                        mat_h_plus_tau, self.processes
                     )
                     eval_plus_tau_list = []
                     evec_plus_tau_list = []
                     results_plus_tau = executor.map(
-                        LSWT.ham_solver, mat_g_plus_tau_split
+                        LSWT.ham_solver, mat_h_plus_tau_split
                     )
                     for result in results_plus_tau:
                         eval_plus_tau_list.append(result[0])
                         evec_plus_tau_list.append(result[1])
 
-                    mat_g_minus_tau_split = np.array_split(
-                        mat_g_minus_tau, self.processes
+                    mat_h_minus_tau_split = np.array_split(
+                        mat_h_minus_tau, self.processes
                     )
                     eval_minus_tau_list = []
                     evec_minus_tau_list = []
                     results_minus_tau = executor.map(
-                        LSWT.ham_solver, mat_g_minus_tau_split
+                        LSWT.ham_solver, mat_h_minus_tau_split
                     )
                     for result in results_minus_tau:
                         eval_minus_tau_list.append(result[0])
@@ -668,10 +682,10 @@ class LSWT(QEspace):
                     evals_minus_tau = np.concatenate(eval_minus_tau_list, axis=0)
                     evecs_minus_tau = np.concatenate(evec_minus_tau_list, axis=0)
 
-                mat_g_split = np.array_split(mat_g, self.processes)
+                mat_h_split = np.array_split(mat_h, self.processes)
                 eval_list = []
                 evec_list = []
-                results = executor.map(LSWT.ham_solver, mat_g_split)
+                results = executor.map(LSWT.ham_solver, mat_h_split)
                 for result in results:
                     eval_list.append(result[0])
                     evec_list.append(result[1])
@@ -680,9 +694,9 @@ class LSWT(QEspace):
 
         else:  # single-core
             if not self.Sample.tau == (0, 0, 0):  # AFM
-                evals_minus_tau, evecs_minus_tau = LSWT.ham_solver(mat_g_plus_tau)
-                evals_plus_tau, evecs_plus_tau = LSWT.ham_solver(mat_g_minus_tau)
-            evals, evecs = LSWT.ham_solver(mat_g)
+                evals_minus_tau, evecs_minus_tau = LSWT.ham_solver(mat_h_plus_tau)
+                evals_plus_tau, evecs_plus_tau = LSWT.ham_solver(mat_h_minus_tau)
+            evals, evecs = LSWT.ham_solver(mat_h)
 
         if not self.Sample.tau == (0, 0, 0):  # AFM
             self.eng_plus_tau = np.reshape(np.round(evals_plus_tau.real, 8), sz_evals)
@@ -709,34 +723,35 @@ class LSWT(QEspace):
         sz_evals = np.shape(self.q_mesh)[1:] + (n_dim,)
         hkl = zip(np.ravel(self.h), np.ravel(self.k), np.ravel(self.l))
 
-        evals, _ = LSWT.ham_solver(LSWT.mat_g(hkl, self.Sample))
+        evals, _ = LSWT.ham_solver(LSWT.mat_h(hkl, self.Sample))
         self.eng = np.reshape(np.round(evals.real, 8), sz_evals)
 
-    # def mat_YZVW(self, alpha, beta):
-    #     """
-    #     matrix of dimension 2*n_ion by 2*n_ion
-    #     """
-    #     n_ion = self.Sample.n_dim
-    #     matY = np.zeros((n_ion, n_ion), dtype="complex_")
-    #     matZ = np.zeros((n_ion, n_ion), dtype="complex_")
-    #     matV = np.zeros((n_ion, n_ion), dtype="complex_")
-    #     matW = np.zeros((n_ion, n_ion), dtype="complex_")
-    #     mat = np.zeros((2 * n_ion, 2 * n_ion), dtype="complex_")
+    def mat_YZVW(self, alpha, beta):
+        """
+        matrix of dimension 2*n_ion by 2*n_ion,
+        to determine which of the S'(q,w) terms are trivial
+        """
+        n_ion = self.Sample.n_dim
+        matY = np.zeros((n_ion, n_ion), dtype="complex_")
+        matZ = np.zeros((n_ion, n_ion), dtype="complex_")
+        matV = np.zeros((n_ion, n_ion), dtype="complex_")
+        matW = np.zeros((n_ion, n_ion), dtype="complex_")
+        mat = np.zeros((2 * n_ion, 2 * n_ion), dtype="complex_")
 
-    #     for i in range(n_ion):  # number of ions
-    #         si = self.Sample.atoms[i].s
-    #         ui = self.Sample.atoms[i].u
-    #         for j in range(n_ion):
-    #             sj = self.Sample.atoms[j].s
-    #             uj = self.Sample.atoms[j].u
-    #             matY[i, j] = np.sqrt(si * sj) * ui[alpha] * np.conj(uj[beta])
-    #             matZ[i, j] = np.sqrt(si * sj) * ui[alpha] * uj[beta]
-    #             matV[i, j] = np.sqrt(si * sj) * np.conj(ui[alpha]) * np.conj(uj[beta])
-    #             matW[i, j] = np.sqrt(si * sj) * np.conj(ui[alpha]) * uj[beta]
+        for i in range(n_ion):  # number of ions
+            si = self.Sample.atoms[i].s
+            ui = self.Sample.atoms[i].u
+            for j in range(n_ion):
+                sj = self.Sample.atoms[j].s
+                uj = self.Sample.atoms[j].u
+                matY[i, j] = np.sqrt(si * sj) * ui[alpha] * np.conj(uj[beta])
+                matZ[i, j] = np.sqrt(si * sj) * ui[alpha] * uj[beta]
+                matV[i, j] = np.sqrt(si * sj) * np.conj(ui[alpha]) * np.conj(uj[beta])
+                matW[i, j] = np.sqrt(si * sj) * np.conj(ui[alpha]) * uj[beta]
 
-    #     # mat = np.block([[matY[:, :], matZ[:, :]], [matV[:, :], matW[:, :]]])
-    #     mat = np.block([[matY, matZ], [matV, matW]])
-    #     return mat
+        # mat = np.block([[matY[:, :], matZ[:, :]], [matV[:, :], matW[:, :]]])
+        mat = np.block([[matY, matZ], [matV, matW]])
+        return mat
 
     def dipolar_factor_calc(self):
         """
@@ -918,37 +933,39 @@ class LSWT(QEspace):
             #                 @ self.mag_form_factors[idx, :, :, :, :, :]
             #                 @ self.mat_T_minus_tau
             #             )[:, :, :, i, i]
-
-            for i in range(self.Sample.n_dim):
-                match tau:
-                    case 0:  # S'(q ,w)^{alpha, beta}
-                        sqw_prime_i = (
-                            self.mat_Td
-                            @ self.mag_form_factors[idx, :, :, :, :, :]
-                            @ self.mat_T
-                        )
+            # ----------------------------------------
+            match tau:
+                case 0:  # S'(q ,w)^{alpha, beta}
+                    sqw_prime_i = (
+                        self.mat_Td
+                        @ self.mag_form_factors[idx, :, :, :, :, :]
+                        @ self.mat_T
+                    )
+                    for i in range(self.Sample.n_dim):
                         sqw_prime[idx, :, :, :, i] = sqw_prime_i[:, :, :, i, i]
                         sqw_prime[idx, :, :, :, -1 - i] = sqw_prime_i[
                             :, :, :, -1 - i, -1 - i
                         ]
 
-                    case 1:  # S'(q + tau ,w)^{alpha, beta}
-                        sqw_prime_i = (
-                            self.mat_Td_plus_tau
-                            @ self.mag_form_factors[idx, :, :, :, :, :]
-                            @ self.mat_T_plus_tau
-                        )
-                        sqw_prime[idx, :, :, :, i] += sqw_prime_i[:, :, :, i, i]
+                case 1:  # S'(q + tau ,w)^{alpha, beta}
+                    sqw_prime_i = (
+                        self.mat_Td_plus_tau
+                        @ self.mag_form_factors[idx, :, :, :, :, :]
+                        @ self.mat_T_plus_tau
+                    )
+                    for i in range(self.Sample.n_dim):
+                        sqw_prime[idx, :, :, :, i] = sqw_prime_i[:, :, :, i, i]
                         sqw_prime[idx, :, :, :, -1 - i] = sqw_prime_i[
                             :, :, :, -1 - i, -1 - i
                         ]
 
-                    case 2:  # S'(q - tau,w)^{alpha, beta}
-                        sqw_prime_i = (
-                            self.mat_Td_minus_tau
-                            @ self.mag_form_factors[idx, :, :, :, :, :]
-                            @ self.mat_T_minus_tau
-                        )
+                case 2:  # S'(q - tau,w)^{alpha, beta}
+                    sqw_prime_i = (
+                        self.mat_Td_minus_tau
+                        @ self.mag_form_factors[idx, :, :, :, :, :]
+                        @ self.mat_T_minus_tau
+                    )
+                    for i in range(self.Sample.n_dim):
                         sqw_prime[idx, :, :, :, i] = sqw_prime_i[:, :, :, i, i]
                         sqw_prime[idx, :, :, :, -1 - i] = sqw_prime_i[
                             :, :, :, -1 - i, -1 - i
@@ -1029,7 +1046,12 @@ class LSWT(QEspace):
             self.gamma_mat = np.delete(self.gamma_mat, mask_branches, axis=3)
 
         amp = LSWT.chi_bose(
-            self.elist, self.eng, self.inten, self.Sample.te, self.gamma_mat
+            self.elist,
+            self.eng,
+            self.inten,
+            self.Sample.te,
+            self.gamma_mat,
+            self.BOSE_FACTOR,
         )
         self.amp = amp  # No resolution convolution
 
