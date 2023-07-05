@@ -39,7 +39,7 @@ if __name__ == "__main__":
             t=(0, 0, 0),
             ion="Mn2",
             spin=s1,
-            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.]],
+            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.01]],
         ),
     ]
     fm_chain.add_atoms(atoms)

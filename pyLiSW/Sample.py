@@ -129,7 +129,7 @@ class Sample(object):
             )
         )
 
-    def add_atoms(self, all_atoms):
+    def add_atoms(self, all_atoms, PRINT=True):
         """
         Add unique atoms in the first magnetic unit cell,
         as many as the  number of magnon bands
@@ -140,10 +140,11 @@ class Sample(object):
         #         atoms.append(atom)
         # self.atoms = atoms
         self.atoms = all_atoms
-        self.sort_atoms()
         self.n_dim = np.shape(self.atoms)[0]
+        if PRINT:
+            self.sort_atoms()
 
-    def add_bonds(self, all_bonds):
+    def add_bonds(self, all_bonds, PRINT=True):
         """
         j<0 for FM
         value is j, not S*j
@@ -170,7 +171,8 @@ class Sample(object):
             bonds.append(Bonds(self, idx0, idx1, r0, r1, j))
         self.Bonds = bonds
 
-        Sample.list_bonds(self.Bonds, (self.a_eff, self.b_eff, self.c_eff))
+        if PRINT:
+            Sample.list_bonds(self.Bonds, (self.a_eff, self.b_eff, self.c_eff))
 
     def sort_atoms(self):
         """

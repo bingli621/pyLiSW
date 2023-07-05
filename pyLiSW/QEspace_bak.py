@@ -37,7 +37,6 @@ class QEspace(object):
     amp             4d simulated neutron intensity
     data            4d intensity data
     err             4d error bar
-    nan_mat         matrix containing the location of NaN's
     -------------------------------------------------------------------------
     Methods
     -------------------------------------------------------------------------
@@ -140,17 +139,13 @@ class QEspace(object):
         Load multiple ascii files
         Might need to change axes orders
         moveaxis=(2,0) for 0K0, (2,1) for HH0
-        return data, err, and matrix containing Nan
         """
         sz = np.shape(self.amp)
         self.data = np.zeros(sz)
         self.err = np.zeros(sz)
 
-        # data = [None] * np.size(datafiles)
-        # err = [None] * np.size(datafiles)
-        data = np.zeros(np.shape(datafiles) + sz)
-        err = np.zeros(np.shape(datafiles) + sz)
-        nan_mat = np.zeros(np.shape(datafiles) + sz)
+        data = [None] * np.size(datafiles)
+        err = [None] * np.size(datafiles)
         for i, datafile in enumerate(datafiles):
             with open(datafile, "r") as f:
                 header = f.readlines()
@@ -166,8 +161,6 @@ class QEspace(object):
                 # err[i] = (data_err.reshape(tuple(dim))) ** 2
                 data[i] = data_int.reshape(tuple(sz))
                 err[i] = (data_err.reshape(tuple(sz))) ** 2
-                nan_mat[i] = ~np.isnan(data[i])
-
                 # --------------------------------------------
                 if moveaxis is not None:  # move axis based on the axis from mantid 0K0
                     data[i] = np.moveaxis(data[i], moveaxis[0], moveaxis[1])
@@ -183,18 +176,10 @@ class QEspace(object):
             self.err = np.sqrt(np.nansum(err, axis=0)) / cnt
             np.seterr(divide="warn", invalid="warn")
 
-        self.nan_mat = nan_mat
-
-        return self.data, self.err, self.nan_mat
+        return self.data, self.err
 
     def slice(
-        self,
-        slice_ranges,
-        plot_axes,
-        aspect=None,
-        PLOT=True,
-        SIM=False,
-        **kwargs,
+        self, slice_ranges, plot_axes, aspect=None, PLOT=True, SIM=False, **kwargs
     ):
         """
         Make slice and generate a contour plot. Two axes not for plotting will
@@ -313,23 +298,17 @@ class QEspace(object):
                     cnt_temp[idx] += 1
                 if rebin_idx == 0:  # rebin x axis
                     # slice_temp /= cnt_temp[cnt_temp > 0][:, None]
-                    np.seterr(divide="ignore", invalid="ignore")
                     slice_temp /= cnt_temp[:, None]
-                    np.seterr(divide="warn", invalid="warn")
                     if not SIM:
                         # err_temp /= cnt_temp[cnt_temp > 0][:, None]
                         err_temp /= cnt_temp[:, None]
                 elif rebin_idx == 1:  # rebin y axis
                     # -----------------------------------------------
                     # slice_temp /= cnt_temp[cnt_temp > 0][None, :]
-                    np.seterr(divide="ignore", invalid="ignore")
                     slice_temp /= cnt_temp[None, :]
-                    np.seterr(divide="warn", invalid="warn")
                     if not SIM:
                         # err_temp /= cnt_temp[cnt_temp > 0][None, :]
-                        np.seterr(divide="ignore", invalid="ignore")
                         err_temp /= cnt_temp[None, :]
-                        np.seterr(divide="warn", invalid="warn")
                 slice = slice_temp
                 if not SIM:
                     err = err_temp
@@ -434,9 +413,7 @@ class QEspace(object):
         if SIM:
             amp_sim = self.amp[idx_mat]
             cnt_sim = np.nansum(~np.isnan(amp_sim), axis=tuple(bin_axes))
-            np.seterr(divide="ignore", invalid="ignore")
             cut_sim = np.nansum(amp_sim, axis=tuple(bin_axes)) / cnt_sim
-            np.seterr(divide="warn", invalid="warn")
         if self.data is not None:
             amp_data = self.data[idx_mat]
             err_sq = self.err[idx_mat] ** 2
@@ -494,24 +471,15 @@ class QEspace(object):
                 else:
                     idx = np.size(plot_range) - 1
                 if SIM:
-                    if not np.isnan(cut_sim[i]):
-                        cut_sim_temp[idx] += cut_sim[i]
-                        cnt_sim_temp[idx] += 1
-                    else:
-                        pass
+                    cut_sim_temp[idx] += cut_sim[i]
+                    cnt_sim_temp[idx] += 1
                 if self.data is not None:
-                    if not np.isnan(cut[i]):
-                        cut_temp[idx] += cut[i]
-                        err_temp[idx] += err[i] ** 2
-                        cnt_temp[idx] += 1
-                    else:
-                        pass
+                    cut_temp[idx] += cut[i]
+                    err_temp[idx] += err[i] ** 2
+                    cnt_temp[idx] += 1
             if SIM:
-                np.seterr(divide="ignore", invalid="ignore")
                 cut_sim_temp /= cnt_sim_temp  # [cnt_sim_temp] ??
-                np.seterr(divide="warn", invalid="warn")
                 cut_sim = cut_sim_temp
-
             if self.data is not None:
                 np.seterr(divide="ignore", invalid="ignore")
                 cut_temp /= cnt_temp
@@ -575,8 +543,8 @@ class QEspace(object):
         if q_axis == "x":
             plot_x = self.xlist
             label_x = self.axes_labels[0]
-            idx1 = round((nq1 - 1) / 2)
-            idx2 = round((nq2 - 1) / 2)
+            idx1 = round((nq1-1) / 2)
+            idx2 = round((nq2-1) / 2)
             plot_ys = self.eng[:, idx1, idx2, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[1],
@@ -587,8 +555,8 @@ class QEspace(object):
         elif q_axis == "y":
             plot_x = self.ylist
             label_x = self.axes_labels[1]
-            idx0 = round((nq0 - 1) / 2)
-            idx2 = round((nq2 - 1) / 2)
+            idx0 = round((nq0-1) / 2)
+            idx2 = round((nq2-1) / 2)
             plot_ys = self.eng[idx0, :, idx2, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[0],
@@ -599,8 +567,8 @@ class QEspace(object):
         elif q_axis == "z":
             plot_x = self.zlist
             label_x = self.axes_labels[2]
-            idx0 = round((nq0 - 1) / 2)
-            idx1 = round((nq1 - 1) / 2)
+            idx0 = round((nq0-1) / 2)
+            idx1 = round((nq1-1) / 2)
             plot_ys = self.eng[idx0, idx1, :, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[0],

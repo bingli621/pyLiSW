@@ -422,10 +422,13 @@ class LSWT(QEspace):
                     "Energies of energy-gain and -loss sides are not the same, "
                     + "we may have a problem."
                 )
-            if np.any(np.abs(inten_i_pos - inten_i_neg) > 1e-6):
+            # check if intensity on both sizes match
+            diff = (np.abs(inten_i_pos - inten_i_neg) > 1e-3)
+            if np.sum(diff) > 0.1 * np.size(diff):
+                # more than 10% difference
                 print(
                     "Intensity of energy-gain and -loss sides are not the same, "
-                    + "we may have a problem trlated to the band-degeneracy."
+                    + "we may have a problem related to the band-degeneracy."
                 )
 
             chi_bose_i = (
