@@ -423,7 +423,7 @@ class LSWT(QEspace):
                     + "we may have a problem."
                 )
             # check if intensity on both sizes match
-            diff = (np.abs(inten_i_pos - inten_i_neg) > 1e-3)
+            diff = np.abs(inten_i_pos - inten_i_neg) > 1e-3
             if np.sum(diff) > 0.1 * np.size(diff):
                 # more than 10% difference
                 print(
