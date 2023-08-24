@@ -37,19 +37,19 @@ Tutorial 11. 1D incommensurate cycloid chain. Moments rotates in xz-plane, propa
 Tutorial 12. 1D incommensurate cycloid chain. Moments rotates in xz-plane, propagation vector tau=(0.1, 0, 0). Cycloid due to competing exchange interation, FM J1 = -1 meV, AFM J2 = 0.309 meV. Calculated using a supercell containing 10 unit cells.
 
 ![cycloid_CEI_sup_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/12_AFM_1d_cycloid_supercell_CEI_1.png)
-![cycloid_suo_CEI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/12_AFM_1d_cycloid_supercell_CEI_2.png)
+![cycloid_sup_CEI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/12_AFM_1d_cycloid_supercell_CEI_2.png)
 
 Tutorial 13. 1D incommensurate cycloid chain. Moments rotates in xz-plane, propagation vector tau=(0.1, 0, 0). Cycloid due to DM interation, FM J1 = -1 meV, D_y = +0.727 meV
 
-![cycloid_CEI_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/13_AFM_1d_cycloid_DMI_1.png)
-![cycloid_CEI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/13_AFM_1d_cycloid_DMI_2.png)
+![cycloid_DMI_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/13_AFM_1d_cycloid_DMI_1.png)
+![cycloid_DMI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/13_AFM_1d_cycloid_DMI_2.png)
 
 Tutorial 14. 1D incommensurate cycloid chain. Moments rotates in xz-plane, propagation vector tau=(0.1, 0, 0). Cycloid due to DM interation, FM J1 = -1 meV, D_y = +0.727 meV. Calculated using a supercell containing 10 unit cells.
 
-![cycloid_CEI_sup_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/14_AFM_1d_cycloid_supercell_DMI_1.png)
-![cycloid_suo_CEI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/14_AFM_1d_cycloid_supercell_DMI_2.png)
+![cycloid_DMI_sup_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/14_AFM_1d_cycloid_supercell_DMI_1.png)
+![cycloid_sup_DMI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/14_AFM_1d_cycloid_supercell_DMI_2.png)
 
 Tutorial 15. Cmoparison of 1D incommensurate cycloid chains due to competeing exchange interactions (CEI) and DM interactions (DMI). Moments rotates in xz-plane, propagation vector tau=(0.2, 0, 0). FM J1 = -1 meV in both cases. In CEI case, AFM J2 = 0.809 meV. In DMI case, Dy = +3.078 meV.
 
-![cycloid_CEI_sup_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/15_AFM_1d_cycloid_CEI_DMI_comparison_3.png)
-![cycloid_suo_CEI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/15_AFM_1d_cycloid_CEI_DMI_comparison 4.png)
+![cycloid_CEI_DMI_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/15_AFM_1d_cycloid_CEI_DMI_comparison_3.png)
+![cycloid_CEI_DMI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/15_AFM_1d_cycloid_CEI_DMI_comparison_4.png)
