@@ -28,3 +28,8 @@ Tutorial 10. Neel type AFM on a honeycomb lattice, modeled using a supercell (Mi
 ![AFM_hc_disp_m110](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/10_AFM_honeycomb_3.png)
 
 ![AFM_hc_inten_m110](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/10_AFM_honeycomb_4.png)
+
+Tutorial 11. 1D incommensurate cycloid chain. Moments rotates in xz-plane, propagation vector tau=(0.1, 0, 0). Cycloid due to competing exchange interation, FM J1 = -1 meV, AFM J2 = 0.309 meV
+
+!(https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/11_AFM_1d_cycloid_CEI_1.png)
+!(https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/11_AFM_1d_cycloid_CEI_2.png)
