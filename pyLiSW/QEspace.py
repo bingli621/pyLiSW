@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 params = {
-    "legend.fontsize": "x-large",
+    # "legend.fontsize": "x-large",
     # "figure.figsize": (8, 6),
     "axes.labelsize": "xx-large",
     "axes.titlesize": "xx-large",
@@ -571,13 +571,26 @@ class QEspace(object):
         """
         Plot dispersion along given high symmetry direction x, y or z
         """
+        AFM_FLAG = False
         nq0, nq1, nq2, n_dim = np.shape(self.eng)
+        if not self.Sample.tau == (0, 0, 0):  # AFM
+            AFM_FLAG = True
         if q_axis == "x":
             plot_x = self.xlist
             label_x = self.axes_labels[0]
             idx1 = round((nq1 - 1) / 2)
             idx2 = round((nq2 - 1) / 2)
-            plot_ys = self.eng[:, idx1, idx2, :]
+            if AFM_FLAG:
+                plot_ys = np.concatenate(
+                    [
+                        self.eng[:, idx1, idx2, :],
+                        self.eng_minus_tau[:, idx1, idx2, :],
+                        self.eng_plus_tau[:, idx1, idx2, :],
+                    ],
+                    axis=-1,
+                )
+            else:
+                plot_ys = self.eng[:, idx1, idx2, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[1],
                 self.ylist[idx1],
@@ -589,7 +602,17 @@ class QEspace(object):
             label_x = self.axes_labels[1]
             idx0 = round((nq0 - 1) / 2)
             idx2 = round((nq2 - 1) / 2)
-            plot_ys = self.eng[idx0, :, idx2, :]
+            if AFM_FLAG:
+                plot_ys = np.concatenate(
+                    [
+                        self.eng[idx0, :, idx2, :],
+                        self.eng_minus_tau[idx0, :, idx2, :],
+                        self.eng_plus_tau[idx0, :, idx2, :],
+                    ],
+                    axis=-1,
+                )
+            else:
+                plot_ys = self.eng[idx0, :, idx2, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[0],
                 self.xlist[idx0],
@@ -601,7 +624,17 @@ class QEspace(object):
             label_x = self.axes_labels[2]
             idx0 = round((nq0 - 1) / 2)
             idx1 = round((nq1 - 1) / 2)
-            plot_ys = self.eng[idx0, idx1, :, :]
+            if AFM_FLAG:
+                plot_ys = np.concatenate(
+                    [
+                        self.eng[idx0, idx1, :, :],
+                        self.eng_minus_tau[idx0, idx1, :, :],
+                        self.eng_plus_tau[idx0, idx1, :, :],
+                    ],
+                    axis=-1,
+                )
+            else:
+                plot_ys = self.eng[idx0, idx1, :, :]
             tit = "{}{:.2f}\n{}{:.2f}".format(
                 self.bin_labels[0],
                 self.xlist[idx0],
@@ -613,15 +646,17 @@ class QEspace(object):
 
         shift = 0  # shift to distinguish in case of degeneracy
         fig, ax = plt.subplots()
-        for i in range(n_dim):
+        for i in range(np.shape(plot_ys)[1]):
             #  plot_y = list(itertools.chain(*self.eng[:, :, :, :]))
             plot_y = plot_ys[:, i]
             ax.plot(plot_x, plot_y + shift * i, "-o", label="{}".format(i))
+
         ax.legend()
         ax.grid(alpha=0.6)
         ax.set_ylabel(self.axes_labels[-1])
         ax.set_xlabel(label_x)
         ax.set_title(tit)
+        # legend.set_in_layout(False)
         plt.tight_layout()
         fig.show()
 

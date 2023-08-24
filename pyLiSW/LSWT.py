@@ -58,7 +58,8 @@ class LSWT(QEspace):
     sqw_prime               S'(q,w) * form_factor * diploar_factor, with dimension
                             (n_sqw_prime, qx, qy, qz, 2*n_ion)
     sqw                     S(q,w) * form_factor * diploar_factor , with dimension
-                            (n_sqw, qx, qy, qz, 2*n_ion)
+                            (n_sqw, qx, qy, qz, 2 * n_ion, tau_idx = 1) for FM,
+                            (n_sqw, qx, qy, qz, 2 * n_ion, tau_idx = 3) for AFM
     bose_factor             Bose factor
     gamma_list              damping factor as a function of energy
     inten                   INS intensity
@@ -225,10 +226,9 @@ class LSWT(QEspace):
         evecs_k = []
         k_dim = np.shape(hmat)[0]
         n_ion = int(np.shape(hmat)[1] / 2)
-        one_mat = np.eye(n_ion)
         # zero_mat = np.zeros_like(one_mat)
         gmat = np.diag(np.array([1] * n_ion + [-1] * n_ion))
-        epsilon = 1e-2
+        epsilon = 1e-3
         delta_mat = np.diag(np.array([1] * n_ion + [1] * n_ion)) * epsilon
 
         for i in range(k_dim):
@@ -237,7 +237,7 @@ class LSWT(QEspace):
             evals = np.linalg.eigvals(gmat @ hmat_i)
             evals = np.round(evals.real, 4)  # discarding the imaginary part
 
-            if not np.all(evals):  # zero energies
+            if not np.all(np.unique(np.abs(evals))):  # zero energies
                 ZERO_ENERGY = True
                 hmat[i, :, :] += delta_mat
             # -------------------- Cholesky decomposition ------------------------
@@ -514,6 +514,8 @@ class LSWT(QEspace):
         sqw_components = []
         for i in range(3):
             for j in range(3):
+                # this if-statment works for collinear case
+                # but miss components for incommensurate non-collinear cases
                 if np.any(self.mat_YZVW(i, j).real) or np.any(self.mat_YZVW(i, j).imag):
                     if self.Sample.tau == (0, 0, 0):  # FM
                         sqw_components.append([0, i, j])
@@ -521,21 +523,12 @@ class LSWT(QEspace):
                         for tau in range(3):
                             sqw_components.append([tau, i, j])
 
-                # if i == j: # Sij real, keep real cooefficients
-                #     if np.any(self.mat_YZVW(i, j).real):
-                #         if self.Sample.tau == (0, 0, 0):  # FM
-                #             sqw_components.append([0, i, j])
-                #         else:  # AFM
-                #             for tau in range(3):
-                #                 sqw_components.append([tau, i, j])
-                # else: # Sij imaginary, check imag cooefficients
-                #     #if np.any((self.mat_YZVW(i, j) + self.mat_YZVW(j, i)).real):
-                #     if np.any(self.mat_YZVW(i, j).imag):
-                #         if self.Sample.tau == (0, 0, 0):  # FM
-                #             sqw_components.append([0, i, j])
-                #         else:  # AFM
-                #             for tau in range(3):
-                #                 sqw_components.append([tau, i, j])
+                # if not (i == 2 and j == 2):  # ignores S'zz
+                #     if self.Sample.tau == (0, 0, 0):  # FM
+                #         sqw_components.append([0, i, j])
+                #     else:  # AFM
+                #         for tau in range(3):
+                #             sqw_components.append([tau, i, j])
 
         return sqw_components
 
@@ -725,9 +718,25 @@ class LSWT(QEspace):
         n_dim = 2 * self.Sample.n_dim
         sz_evals = np.shape(self.q_mesh)[1:] + (n_dim,)
         hkl = zip(np.ravel(self.h), np.ravel(self.k), np.ravel(self.l))
-
         evals, _ = LSWT.ham_solver(LSWT.mat_h(hkl, self.Sample))
         self.eng = np.reshape(np.round(evals.real, 8), sz_evals)
+
+        if not self.Sample.tau == (0, 0, 0):  # AFM
+            hkl_plus_tau = zip(
+                np.ravel(self.h_plus_tau),
+                np.ravel(self.k_plus_tau),
+                np.ravel(self.l_plus_tau),
+            )
+            evals_plus_tau, _ = LSWT.ham_solver(LSWT.mat_h(hkl_plus_tau, self.Sample))
+            hkl_minus_tau = zip(
+                np.ravel(self.h_minus_tau),
+                np.ravel(self.k_minus_tau),
+                np.ravel(self.l_minus_tau),
+            )
+            evals_minus_tau, _ = LSWT.ham_solver(LSWT.mat_h(hkl_minus_tau, self.Sample))
+
+            self.eng_plus_tau = np.reshape(np.round(evals_plus_tau.real, 8), sz_evals)
+            self.eng_minus_tau = np.reshape(np.round(evals_minus_tau.real, 8), sz_evals)
 
     def mat_YZVW(self, alpha, beta):
         """
@@ -980,9 +989,13 @@ class LSWT(QEspace):
         """
         Calculation S(q,w)^{alpha, beta}
         """
-        n_dim = 2 * self.Sample.n_dim
+        if not self.Sample.tau == (0, 0, 0):  # AFM
+            n_dim = (2 * self.Sample.n_dim, 3)
+        else:  # FM
+            n_dim = (2 * self.Sample.n_dim, 1)
+        # n_dim = (2 * self.Sample.n_dim,)
         n_sqw_components = np.shape(self.sqw_components)[0]
-        sz = (n_sqw_components,) + np.shape(self.q_mesh)[1:] + (n_dim,)
+        sz = (n_sqw_components,) + np.shape(self.q_mesh)[1:] + n_dim
         sqw = np.zeros(sz, dtype="complex_")
 
         self.energy_calc()
@@ -990,7 +1003,8 @@ class LSWT(QEspace):
 
         for idx in range(n_sqw_components):
             for coeff in self.sqw_components_coeffs[idx]:
-                sqw[idx, :, :, :, :] += (
+                tau_idx = self.sqw_prime_components[coeff[0]][0]
+                sqw[idx, :, :, :, :, tau_idx] += (
                     float(sp.re(coeff[1])) + 1j * float(sp.im(coeff[1]))
                 ) * self.sqw_prime[coeff[0], :, :, :, :]
         self.sqw = sqw.real
@@ -1019,6 +1033,7 @@ class LSWT(QEspace):
         start = time.perf_counter()
         self.sqw_calc()
 
+        # --------------------  map damping from enery to Q -----------------
         # default damping
         disp_list, gamma_list = LSWT.damping_factor_init(
             self.eng,
@@ -1027,36 +1042,60 @@ class LSWT(QEspace):
         )
         # self.gamma_list
         self.gamma_mat = LSWT.damping_factor_mapping(self.eng, disp_list, gamma_list)
+        # ------------------------------------------------------------
 
-        n_sqw, qx, qy, qz, n_dim = np.shape(self.sqw)
-        inten = np.zeros((qx, qy, qz, n_dim), dtype="float_")
-        for n in range(n_dim):
-            for idx in range(n_sqw):
-                inten[:, :, :, n] += (
-                    self.dipolar_factors[idx, :, :, :] * self.sqw[idx, :, :, :, n].real
-                )
+        n_sqw, qx, qy, qz, n_dim, n_tau = np.shape(self.sqw)
+        inten = np.zeros((qx, qy, qz, n_dim, n_tau), dtype="float_")
 
-        if mask is None:
-            self.inten = inten
-        else:
-            n = self.Sample.n_dim * 2
-            mask_branches = []
-            for i in mask:
-                mask_branches.append(i)
-                mask_branches.append(n - i - 1)
-            self.inten = np.delete(inten, mask_branches, axis=3)
-            self.eng = np.delete(self.eng, mask_branches, axis=3)
-            self.gamma_mat = np.delete(self.gamma_mat, mask_branches, axis=3)
-
+        # --------?????????????
+        for idx in range(n_sqw):
+            dp = self.dipolar_factors[idx, :, :, :]
+            for t in range(n_tau):
+                for d in range(n_dim):
+                    if np.any(self.sqw[idx, :, :, :, d, t]):
+                        inten[:, :, :, d, t] += dp * self.sqw[idx, :, :, :, d, t].real
+        self.inten = inten
+        # -------------------- mask given branch ---------------------
+        # if mask is None:
+        #     self.inten = inten
+        # else:
+        #     n = self.Sample.n_dim * 2
+        #     mask_branches = []
+        #     for i in mask:
+        #         mask_branches.append(i)
+        #         mask_branches.append(n - i - 1)
+        #     self.inten = np.delete(inten, mask_branches, axis=3)
+        #     self.eng = np.delete(self.eng, mask_branches, axis=3)
+        #     self.gamma_mat = np.delete(self.gamma_mat, mask_branches, axis=3)
+        # ------------------------------------------------------------
         amp = LSWT.chi_bose(
             self.elist,
             self.eng,
-            self.inten,
+            self.inten[:, :, :, :, 0],
             self.Sample.te,
             self.gamma_mat,
             self.BOSE_FACTOR,
         )
-        self.amp = amp  # No resolution convolution
+        if not self.Sample.tau == (0, 0, 0):  # AFM
+            amp_plus_tau = LSWT.chi_bose(
+                self.elist,
+                self.eng_plus_tau,
+                self.inten[:, :, :, :, 1],
+                self.Sample.te,
+                self.gamma_mat,
+                self.BOSE_FACTOR,
+            )
+            amp_minus_tau = LSWT.chi_bose(
+                self.elist,
+                self.eng_minus_tau,
+                self.inten[:, :, :, :, 2],
+                self.Sample.te,
+                self.gamma_mat,
+                self.BOSE_FACTOR,
+            )
+            self.amp = amp + amp_plus_tau + amp_minus_tau
+        else:  # FM
+            self.amp = amp  # No resolution convolution
 
         # kinematic limit
         if self.ei is not None:

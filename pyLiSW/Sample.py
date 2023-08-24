@@ -167,7 +167,13 @@ class Sample(object):
             idx1, idx0 = bonds[i].idx
             r1 = bonds[i].r0
             r0 = bonds[i].r1
-            j = bonds[i].j
+            # -------- treat the symmetric and anti-symmetric parts separately --------
+            j_mat = bonds[i].j
+            j_mat_T = np.transpose(j_mat)
+            j_mat_sym = (j_mat + j_mat_T) / 2
+            j_mat_asym = (j_mat - j_mat_T) / 2
+            j = j_mat_sym - j_mat_asym
+            # --------------------------------------------------------------------------
             bonds.append(Bonds(self, idx0, idx1, r0, r1, j))
         self.Bonds = bonds
 
