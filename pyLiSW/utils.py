@@ -131,3 +131,8 @@ def gauss(x, a, c, f):
     """
     s = f / (2 * np.sqrt(2 * np.log(2)))
     return np.exp(-((x - c) ** 2) / (2 * s**2)) * a / (s * np.sqrt(2 * np.pi))
+
+
+if __name__ == "__main__":
+    print(rot_vec(np.pi/2,[0,1,0]))
+    print(rot_vec(-np.pi/2,[0,1,0]))

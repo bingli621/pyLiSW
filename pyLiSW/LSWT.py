@@ -147,8 +147,13 @@ class LSWT(QEspace):
         # avoid warning of true_division
         if BOSE_FACTOR:
             np.seterr(divide="ignore", invalid="ignore")
-            bose = np.nan_to_num(1.0 / (1.0 - np.exp(-elist * LSWT.kelvin_by_meV / te)))
+            bose = np.nan_to_num(
+                1.0 / (1.0 - np.exp(-elist * LSWT.kelvin_by_meV / te))
+            )
             np.seterr(divide="warn", invalid="warn")
+             # advoid zero energy divergence
+            epsilon = 1e-4
+            bose = np.where(np.abs(elist) < epsilon, 1, bose)
         else:  # for test purposes
             bose = np.ones_like(elist)
             bose[elist < 0] = -1
@@ -171,7 +176,7 @@ class LSWT(QEspace):
         mat_mB = np.zeros(shape=sp, dtype="complex_")
         mat_C = np.zeros(shape=sp, dtype="complex_")
 
-        for Bond in Sample.Bonds:
+        for Bond in Sample.Bonds:  # already doubled due to the reverse pair
             idx0, idx1 = Bond.idx
             ui_T = Bond.atom0.u.T
             uj = Bond.atom1.u
@@ -191,15 +196,15 @@ class LSWT(QEspace):
             mat_mB[:, idx0, idx1] += b * exp_k
             mat_C[:, idx0, idx0] += c * np.ones_like(exp_k)
 
-        for i in range(n_dim):
+        for i in range(n_dim):  # Doubled!!!
             atom_i = Sample.atoms[i]
             if np.any(atom_i.aniso):
                 s = atom_i.s
                 u = atom_i.u
                 v = atom_i.v
-                a = s * (u.T @ atom_i.aniso @ u.conj()).item() / 2
-                b = s * (u.T @ atom_i.aniso @ u).item() / 2
-                c = s * (v.T @ atom_i.aniso @ v).item()
+                a = s * (u.T @ atom_i.aniso @ u.conj()).item()
+                b = s * (u.T @ atom_i.aniso @ u).item()
+                c = s * (v.T @ atom_i.aniso @ v).item() * 2
                 mat_A[:, i, i] += a
                 mat_B[:, i, i] += b
                 mat_mA[:, i, i] += a
@@ -207,6 +212,16 @@ class LSWT(QEspace):
                 mat_C[:, i, i] += c
             else:  # no anisotropy
                 pass
+
+        if np.any(Sample.mag):  # doubled!!
+            for i in range(n_dim):
+                atom_i = Sample.atoms[i]
+                v_i = atom_i.v
+                h = -atom_i.g * LSWT.mu_B * np.dot(Sample.mag, v_i)
+                mat_A[:, i, i] += h
+                mat_mA[:, i, i] += h
+        else:
+            pass
 
         hmat = np.block(
             [[mat_A - mat_C, mat_B], [np.conj(mat_mB), np.conj(mat_mA) - mat_C]]
@@ -229,58 +244,93 @@ class LSWT(QEspace):
         # zero_mat = np.zeros_like(one_mat)
         gmat = np.diag(np.array([1] * n_ion + [-1] * n_ion))
         epsilon = 1e-3
-        delta_mat = np.diag(np.array([1] * n_ion + [1] * n_ion)) * epsilon
+        # delta_mat = np.diag(np.array([1] * n_ion + [1] * n_ion)) * epsilon
 
         for i in range(k_dim):
             hmat_i = hmat[i, :, :]
-            # check if all eigenvalues are positive
-            evals = np.linalg.eigvals(gmat @ hmat_i)
-            evals = np.round(evals.real, 4)  # discarding the imaginary part
 
-            if not np.all(np.unique(np.abs(evals))):  # zero energies
-                ZERO_ENERGY = True
-                hmat[i, :, :] += delta_mat
+            # if not np.all(np.unique(np.abs(evals))):  # zero energies
+            #     ZERO_ENERGY = True
+            #     hmat[i, :, :] += delta_mat
             # -------------------- Cholesky decomposition ------------------------
-            kmat_d = np.linalg.cholesky(hmat_i)
-            kmat = kmat_d.T.conj()
-            kgkdmat = kmat @ gmat @ kmat_d
-            evals, evecs = np.linalg.eigh(kgkdmat)  # complex hermitian matrix
-            evals_r = np.round(evals.real, 4)
-            # evecs_r = np.round(evecs.real, 8) + np.round(evecs.imag, 8) * 1j
-            # --------------- sort eigenvalues and eigenvectors --------------
-            idx = evals.argsort()[::-1]
-            evals_s = evals_r[idx]
-            evals_k.append(evals_s)
+            try:
+                kmat_d = np.linalg.cholesky(hmat_i)
+                kmat = kmat_d.T.conj()
+                kgkdmat = kmat @ gmat @ kmat_d
+                evals, evecs = np.linalg.eigh(kgkdmat)  # complex hermitian matrix
+                evals_r = np.round(evals.real, 4)
+                # evecs_r = np.round(evecs.real, 8) + np.round(evecs.imag, 8) * 1j
+                # --------------- sort eigenvalues and eigenvectors --------------
+                idx = evals.argsort()[::-1]
+                evals_s = evals_r[idx]
+                evals_k.append(evals_s)
 
-            umat = evecs[:, idx]
-            lmat = np.round(umat.T.conj() @ kgkdmat @ umat, 4)
-            emat = np.round((gmat @ lmat).real, 4)
-            for i in range(n_ion * 2):
-                for j in range(n_ion * 2):
-                    if not i == j:
-                        if np.abs(emat[i, j]) > 1e-6:
-                            print("Warning: eigenvectors non-orthogonal!")
-                            # print(emat)
-                            # print(umat[:, 0])
-                        else:  # zero non-diagonal
+                umat = evecs[:, idx]
+                lmat = np.round(umat.T.conj() @ kgkdmat @ umat, 4)
+                emat = np.round((gmat @ lmat).real, 4)
+                for i in range(n_ion * 2):
+                    for j in range(n_ion * 2):
+                        if not i == j:
+                            if np.abs(emat[i, j]) > 1e-6:
+                                print("Warning: eigenvectors non-orthogonal!")
+                                # print(emat)
+                                # print(umat[:, 0])
+                            else:  # zero non-diagonal
+                                pass
+                        else:  # diagonal
                             pass
-                    else:  # diagonal
-                        pass
 
-            # --------------- normalize eigenvectors ---------------
-            matT = np.linalg.inv(kmat) @ umat @ np.sqrt(emat)
-            # matTd = matT.T.conj()
-            # norms = (matTd @ gmat @ matT).round(8)
-            # for i in range(n_ion):
-            #     matT[:, i] = matT[:, i] / np.sqrt(norms[i, i])
-            #     matT[:, -1 - i] = matT[:, -1 - i] / np.sqrt(-norms[-1 - i, -1 - i])
-            evecs_k.append(matT)
+                matT = np.linalg.inv(kmat) @ umat @ np.sqrt(emat)
+                evecs_k.append(matT)
 
-        if ZERO_ENERGY:
-            print(
-                "Zero eigenvalue encountered. A small value of {}".format(epsilon)
-                + " is added to the Hamiltonian to avoid divergence."
-            )
+            except np.linalg.LinAlgError as err:
+                print("Warning! Choleskey decomposition failure!")
+                print(err)
+                # The proposed magnetic structure might mot be
+                # the ground statet of the Hamiltonian
+
+                try:  # solve hamiltonian directly
+                    evals, evecs = np.linalg.eig(gmat @ hmat_i)
+                    # if not np.all(np.round(evals.real, 4)):  # zero energies
+                    #     ZERO_ENERGY = True
+                    #     # hmat[i, :, :] += delta_mat
+                    #     evals += epsilon
+                    evals_r = np.round(evals.real, 4)  # discarding the imaginary part
+                    if np.any(evals.imag > epsilon):
+                        print(
+                            "Warining! Imaginary part of eigenvaules larger than {}".format(
+                                epsilon
+                            )
+                        )
+                    # --------------- sort eigenvalues and eigenvectors --------------
+                    idx = evals.argsort()[::-1]
+                    evals_s = evals_r[idx]
+                    evals_k.append(evals_s)
+                    matT = np.round(evecs[:, idx], 4)  # discarding the imaginary part
+                    # --------------- normalize eigenvectors ---------------
+                    matTd = matT.T.conj()
+                    norms = (matTd @ gmat @ matT).round(8)
+                    for i in range(n_ion):
+                        matT[:, i] = matT[:, i] / np.sqrt(norms[i, i])
+                        matT[:, -1 - i] = matT[:, -1 - i] / np.sqrt(
+                            -norms[-1 - i, -1 - i]
+                        )
+                    evecs_k.append(matT)
+
+                except np.linalg.LinAlgError as err:
+                    print("Hamiltonian diagonalization failure!")
+                    print(err)
+                    print(
+                        """The proposed magnetic structure might mot be """
+                        + """the ground statet of the Hamiltonian."""
+                    )
+                    exit()
+
+        # if ZERO_ENERGY:
+        #     print(
+        #         "Zero eigenvalue encountered. A small value of {}".format(epsilon)
+        #         + " is added to the Hamiltonian to avoid divergence."
+        #     )
 
         return np.array(evals_k), np.array(evecs_k)
 

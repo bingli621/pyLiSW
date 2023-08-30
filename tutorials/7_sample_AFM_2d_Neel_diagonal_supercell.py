@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # temperature
     te = 20
 
-    afm_Neel = Sample((a_eff, b_eff, c_eff), tau, n, te)
+    afm_Neel = Sample((a_eff, b_eff, c_eff), tau, n, te, mag=[0, 0, -0])
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------

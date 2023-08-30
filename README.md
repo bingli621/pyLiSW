@@ -53,3 +53,6 @@ Tutorial 15. Cmoparison of 1D incommensurate cycloid chains due to competeing ex
 
 ![cycloid_CEI_DMI_disp](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/15_AFM_1d_cycloid_CEI_DMI_comparison_3.png)
 ![cycloid_CEI_DMI](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/15_AFM_1d_cycloid_CEI_DMI_comparison_4.png)
+
+Tutorial 16. 1D Neel AFM chain in applied magnetic field.
+![AFM_in_field](https://raw.githubusercontent.com/bingli621/pyLiSW/master/tutorials/16_AFM_1d_Neel_supercell_in_field.png)

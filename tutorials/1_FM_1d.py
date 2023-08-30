@@ -27,7 +27,9 @@ if __name__ == "__main__":
     n = (0, 1, 0)
     # temperature
     te = 2
-    fm_chain = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
+    fm_chain = Sample(
+        (a_eff, b_eff, c_eff), tau, n, te, mag=[0, 0, -0], gamma_fnc=gamma_fnc
+    )
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------
@@ -39,7 +41,7 @@ if __name__ == "__main__":
             t=(0, 0, 0),
             ion="Mn2",
             spin=s1,
-            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.01]],
+            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.0]],
         ),
     ]
     fm_chain.add_atoms(atoms)
@@ -62,8 +64,8 @@ if __name__ == "__main__":
         [-20, 20, 0.01],
     )
     sim_qespace = LSWT(qe_range, fm_chain)
-    # sim_qespace.dispersion_calc()
-    # sim_qespace.plot_disp("x")
+    sim_qespace.dispersion_calc()
+    sim_qespace.plot_disp("x")
     # -------------------------------------------------------------
     # Simulate intensities
     # -------------------------------------------------------------

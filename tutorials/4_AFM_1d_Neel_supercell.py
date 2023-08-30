@@ -27,18 +27,32 @@ if __name__ == "__main__":
     n = (0, 1, 0)
     # temperature
     te = 20
-    afm_chain = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
+    afm_chain = Sample(
+        (a_eff, b_eff, c_eff), tau, n, te, mag=[0, 0, -0], gamma_fnc=gamma_fnc
+    )
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------
     s1 = 5 / 2
     s2 = 5 / 2
-    aniso = [[0, 0, 0], [0, 0, 0], [0, 0, -0.05]]
+    aniso = [[-0.0, 0, 0], [0, 0, 0], [0, 0, -0.05]]
     # atom postions with effective lattice parameters
     atoms = [
-        Atoms(t=(0, 0, 0), ion="Mn2", spin=s1, aniso=aniso),
         Atoms(
-            t=(0.5, 0, 0), ion="Mn2", spin=s2, aniso=aniso, theta=np.pi, n_Rp=(0, 1, 0)
+            t=(0, 0, 0),
+            ion="Mn2",
+            spin=s1,
+            aniso=aniso,
+            theta=0,
+            n_Rp=(0, 1, 0),
+        ),
+        Atoms(
+            t=(0.5, 0, 0),
+            ion="Mn2",
+            spin=s2,
+            aniso=aniso,
+            theta=np.pi,
+            n_Rp=(0, 1, 0),
         ),
     ]
     afm_chain.add_atoms(atoms)
@@ -48,7 +62,7 @@ if __name__ == "__main__":
     j1 = 1  # AFM is positive, FM is negative
     bonds = [
         Bonds(afm_chain, 0, 1, j=j1),
-        Bonds(afm_chain, 0, 1, r1=(-1, 0, 0), j=j1),
+        Bonds(afm_chain, 1, 0, r1=(1, 0, 0), j=j1),
     ]
     afm_chain.add_bonds(bonds)
     # -------------------------------------------------------------

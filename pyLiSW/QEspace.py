@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 params = {
     # "legend.fontsize": "x-large",
     # "figure.figsize": (8, 6),
-    "axes.labelsize": "xx-large",
-    "axes.titlesize": "xx-large",
-    "xtick.labelsize": "xx-large",
-    "ytick.labelsize": "xx-large",
+    "axes.labelsize": "x-large",
+    "axes.titlesize": "x-large",
+    "xtick.labelsize": "x-large",
+    "ytick.labelsize": "x-large",
 }
 plt.rcParams.update(params)
 
@@ -117,6 +117,7 @@ class QEspace(object):
             qe_plot_list[idx] = np.linspace(pstart, pend, num, endpoint=False)
 
         self.xlist, self.ylist, self.zlist, self.elist = qe_plot_list
+
         self.x, self.y, self.z = np.meshgrid(
             self.xlist, self.ylist, self.zlist, indexing="ij"
         )
@@ -230,7 +231,10 @@ class QEspace(object):
         if SIM:
             amp = self.amp[idx_mat]
             cnt = np.nansum(~np.isnan(amp), axis=tuple(bin_axes))
+            # avoid warning of true_division
+            np.seterr(divide="ignore", invalid="ignore")
             slice = np.nansum(amp, axis=tuple(bin_axes)) / cnt
+            np.seterr(divide="warn", invalid="warn")
 
         else:
             amp = self.data[idx_mat]

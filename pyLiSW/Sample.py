@@ -2,6 +2,7 @@
 import numpy as np
 from Bonds import Bonds
 from tabulate import tabulate
+from utils import rot_vec
 
 
 class Sample(object):
@@ -13,6 +14,7 @@ class Sample(object):
     a_eff, b_eff, c_eff     Effective lattice constats in Cartesian coordinate
     tau                     Propagation vector, in units of 2 pi/lat_param_eff
     te                      temperature, for Bose factor calculation
+    mag                     applied magnetic field, in Tesla
     n_R                     axis of rotation of R, for global rotation
     n_dim                   n_atoms, dimension of the Hamiltonian is 2 * n_dim
     atoms                   unique magnetic atoms
@@ -38,6 +40,7 @@ class Sample(object):
         tau=(0, 0, 0),
         n_R=(0, 1, 0),
         te=2,
+        mag=[0, 0, -0],
         gamma_fnc=None,
     ):
         (a, b, c) = lattice_parameters  # determine the effective lattice parameters
@@ -49,6 +52,7 @@ class Sample(object):
         self.n_R = n_R  # vector perpendicular to the plane of rotation
         self.n_R = self.n_R / np.linalg.norm(self.n_R)
         self.te = te  # temperature
+        self.mag = mag
 
         mat_nx = np.array(
             [
@@ -134,11 +138,6 @@ class Sample(object):
         Add unique atoms in the first magnetic unit cell,
         as many as the  number of magnon bands
         """
-        # atoms = []
-        # for atom in all_atoms:
-        #     if atom.s:  # spin non-zero
-        #         atoms.append(atom)
-        # self.atoms = atoms
         self.atoms = all_atoms
         self.n_dim = np.shape(self.atoms)[0]
         if PRINT:

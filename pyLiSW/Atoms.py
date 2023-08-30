@@ -13,7 +13,7 @@ class Atoms(object):
 
     t = (tx, ty, tz)            ion position in the first unit cell
                                 in units of effective lattice parameters
-    ion                     type of magnetic ion, e.g. 'Mn2'
+    ion                         type of magnetic ion, e.g. 'Mn2'
     g                           gyromagnetic ratio, g = 2 by default
     s                           absolute value of spin, scalar
     spin_p                      S' after global rotation R, 3x1 vector
@@ -21,6 +21,7 @@ class Atoms(object):
     ff_params                   parameters for magnetic form factors
     u                           after local rotation R_prime, 3x1 vector
     v                           after local rotation R_prime, 3x1 vector
+    mag_eff                     Effective field after global rotation
     -------------------------------------------------------------------------
     See J. Phys.: Condens. Matter 27 (2015) 166002 for definition of terms
     in the Hamiltonian
@@ -68,6 +69,7 @@ class Atoms(object):
         # print((self.u))
         # print((self.v))
         self.aniso = np.array(aniso)
+        #  self.mag_eff = [0, 0, 0]
 
     @staticmethod
     def form_factor(k_mesh, ff_params, g=2):
