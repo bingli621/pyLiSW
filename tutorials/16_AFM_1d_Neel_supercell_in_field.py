@@ -52,6 +52,7 @@ if __name__ == "__main__":
     )
 
     mag_fields = [0, 5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 70, 80, 90, 100, 110]
+    theta_list = []
     for i in range(n_row):
         for j in range(n_col):
             idx = i * n_row + j
@@ -72,6 +73,7 @@ if __name__ == "__main__":
                 theta0 = 0
             else:
                 theta0 = np.arccos(acos)
+
             eng_SF = (
                 +2 * j1 * s**2 * np.cos(2 * theta0)
                 - 2 * dz * s**2 * np.cos(theta0) ** 2
@@ -81,6 +83,7 @@ if __name__ == "__main__":
             # ------------------------- Add atoms------------------------------
             # atom postions with effective lattice parameters
             if eng_AF < eng_SF:  # AF
+                theta_list.append(90)
                 print(
                     "Antiferromagnetic, B={} T, theta={}".format(
                         mag_field, np.round(theta0 / np.pi * 180, 1)
@@ -97,7 +100,8 @@ if __name__ == "__main__":
                         n_Rp=(0, 1, 0),
                     ),
                 ]
-            else:
+            else:  # SF
+                theta_list.append(theta0 * 180 / np.pi)
                 print(
                     "In spin-flop state, B={} T, theta={}".format(
                         mag_field, np.round(theta0 / np.pi * 180, 1)
@@ -177,6 +181,9 @@ if __name__ == "__main__":
                 va="top",
                 bbox=props,
             )
+
+    print(theta_list)
+
     # plt.setp(ax1.get_yticklabels(), visible=False)
     for i in range(n_row):
         plot_axes[i, 0].set_ylabel(ylab)
