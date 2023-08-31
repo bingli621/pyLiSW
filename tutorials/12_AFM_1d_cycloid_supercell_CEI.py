@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 # 1d AFM chain, Neel type, spin along z
 # -------------------------------------------------------------
 if __name__ == "__main__":
-    num = 10  # size of supercell
+    num = 5  # size of supercell
     # lattice parameters in Angstrom
     a = 3 * num
     # determin the effective lattice parameters
@@ -45,7 +45,7 @@ if __name__ == "__main__":
             spin=s1,
             aniso=aniso,
             n_Rp=(0, 1, 0),
-            theta=theta0 + 2 * np.pi / 10 * i,
+            theta=theta0 + 2 * np.pi / num * i,
         )
         for i in range(num)
     ]
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # Simulate dispersion
     # -------------------------------------------------------------
     qe_range = (
-        [-0.0, 30.05, 0.05],
+        [-0.025, 3 * num + 0.025, 0.05],
         [0.00, 0.01, 0.01],
         [0.00, 0.01, 0.01],
         [-20, 20, 0.01],
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     # Simulate intensities
     # -------------------------------------------------------------
     slice_range = (
-        [0, 30.05, 0.05],
+        [-0.025, 3 * num + 0.025, 0.05],
         [0.00, 0.01],
         [0.00, 0.01],
         [-12, 12.01, 0.01],

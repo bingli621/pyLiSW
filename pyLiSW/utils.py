@@ -17,7 +17,7 @@ def gamma_fnc(x):
     # ARCS Ei=125 meV
     # fwhm = +1.4245e-07 * x**3 + 8.586e-05 * x**2 - 0.036398 * x + 5.5345 + 5
     # fwhm = +1.5427e-07 * x**3 + 9.2779e-05 * x**2 - 0.039016 * x + 5.7486
-    fwhm = 0.2 * np.ones_like(x)
+    fwhm = 0.3 * np.ones_like(x)
     return fwhm
 
 
@@ -134,5 +134,5 @@ def gauss(x, a, c, f):
 
 
 if __name__ == "__main__":
-    print(rot_vec(np.pi/2,[0,1,0]))
-    print(rot_vec(-np.pi/2,[0,1,0]))
+    print(rot_vec(np.pi / 2, [0, 1, 0]))
+    print(rot_vec(-np.pi / 2, [0, 1, 0]))

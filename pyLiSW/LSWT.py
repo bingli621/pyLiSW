@@ -147,11 +147,9 @@ class LSWT(QEspace):
         # avoid warning of true_division
         if BOSE_FACTOR:
             np.seterr(divide="ignore", invalid="ignore")
-            bose = np.nan_to_num(
-                1.0 / (1.0 - np.exp(-elist * LSWT.kelvin_by_meV / te))
-            )
+            bose = np.nan_to_num(1.0 / (1.0 - np.exp(-elist * LSWT.kelvin_by_meV / te)))
             np.seterr(divide="warn", invalid="warn")
-             # advoid zero energy divergence
+            # advoid zero energy divergence
             epsilon = 1e-4
             bose = np.where(np.abs(elist) < epsilon, 1, bose)
         else:  # for test purposes
@@ -1092,12 +1090,28 @@ class LSWT(QEspace):
         )
         # self.gamma_list
         self.gamma_mat = LSWT.damping_factor_mapping(self.eng, disp_list, gamma_list)
+        if not self.Sample.tau == (0, 0, 0):  # AFM
+            disp_list_plus_tau, gamma_list_plus_tau = LSWT.damping_factor_init(
+                self.eng_plus_tau,
+                step=np.mean(np.abs(np.diff(self.elist))),
+                gamma_fcn=self.Sample.gamma_fnc,
+            )
+            disp_list_minus_tau, gamma_list_minus_tau = LSWT.damping_factor_init(
+                self.eng_minus_tau,
+                step=np.mean(np.abs(np.diff(self.elist))),
+                gamma_fcn=self.Sample.gamma_fnc,
+            )
+            self.gamma_mat_plus_tau = LSWT.damping_factor_mapping(
+                self.eng_plus_tau, disp_list_plus_tau, gamma_list_plus_tau
+            )
+            self.gamma_mat_minus_tau = LSWT.damping_factor_mapping(
+                self.eng_minus_tau, disp_list_minus_tau, gamma_list_minus_tau
+            )
         # ------------------------------------------------------------
 
         n_sqw, qx, qy, qz, n_dim, n_tau = np.shape(self.sqw)
         inten = np.zeros((qx, qy, qz, n_dim, n_tau), dtype="float_")
 
-        # --------?????????????
         for idx in range(n_sqw):
             dp = self.dipolar_factors[idx, :, :, :]
             for t in range(n_tau):
@@ -1132,7 +1146,7 @@ class LSWT(QEspace):
                 self.eng_plus_tau,
                 self.inten[:, :, :, :, 1],
                 self.Sample.te,
-                self.gamma_mat,
+                self.gamma_mat_plus_tau,
                 self.BOSE_FACTOR,
             )
             amp_minus_tau = LSWT.chi_bose(
@@ -1140,7 +1154,7 @@ class LSWT(QEspace):
                 self.eng_minus_tau,
                 self.inten[:, :, :, :, 2],
                 self.Sample.te,
-                self.gamma_mat,
+                self.gamma_mat_minus_tau,
                 self.BOSE_FACTOR,
             )
             self.amp = amp + amp_plus_tau + amp_minus_tau

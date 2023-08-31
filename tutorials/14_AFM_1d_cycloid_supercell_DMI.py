@@ -71,10 +71,10 @@ if __name__ == "__main__":
     # Simulate dispersion
     # -------------------------------------------------------------
     qe_range = (
-        [-0.0, 30.05, 0.05],
+        [-0.025, 30.025, 0.05],
         [0.00, 0.01, 0.01],
         [0.00, 0.01, 0.01],
-        [-30, 30.01, 0.01],
+        [-30.005, 30.005, 0.01],
     )
     sim_qespace = LSWT(qe_range, afm_chain)
     sim_qespace.dispersion_calc()
@@ -83,10 +83,10 @@ if __name__ == "__main__":
     # Simulate intensities
     # -------------------------------------------------------------
     slice_range = (
-        [0, 30.05, 0.05],
+        [-0.025, 30.025, 0.05],
         [0.00, 0.01],
         [0.00, 0.01],
-        [-15, 15.01, 0.01],
+        [-15.005, 15.005, 0.01],
     )
     sim_qespace.inten_calc()
     sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=5)
