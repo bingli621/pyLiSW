@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 # 1d AFM chain, Neel type, spin along z
 # -------------------------------------------------------------
 if __name__ == "__main__":
-    num = 5  # size of supercell
+    num = 10  # size of supercell
     # lattice parameters in Angstrom
     a = 3 * num
     # determin the effective lattice parameters

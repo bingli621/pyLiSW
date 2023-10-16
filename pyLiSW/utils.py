@@ -8,10 +8,7 @@ def gamma_fnc(x):
     """
     # ARCS Ei=75 meV
     # fwhm = +3.3349e-07 * x**3 + 0.00011656 * x**2 - 0.030234 * x + 2.8092
-    # CNCS Ei = 3.32 meV
-    # fwhm = +0.00030354 * x**3 + 0.0039009 * x**2 - 0.040862 * x + 0.11303
-    # CNCS Ei = 1.55 meV
-    # fwhm = +0.00096336 * x**3 + 0.005865 * x**2 - 0.027999 * x + 0.038397
+
     # ARCS Ei=50 meV
     # fwhm = +9.1948e-07 * x**3 + 0.00020961 * x**2 - 0.03571 * x + 1.9454
     # ARCS Ei=125 meV
@@ -21,11 +18,17 @@ def gamma_fnc(x):
     return fwhm
 
 
-def gamma_fnc_50(x):
-    """
-    Customize damping FWHM gamma as a function of energy
-    """
-    # ARCS Ei=50 meV
+def gamma_fnc_3p32(x):  # CNCS Ei = 3.32 meV
+    fwhm = +0.00030354 * x**3 + 0.0039009 * x**2 - 0.040862 * x + 0.11303
+    return fwhm
+
+
+def gamma_fnc_1p55(x):  # CNCS Ei = 1.55 meV
+    fwhm = +0.00096336 * x**3 + 0.005865 * x**2 - 0.027999 * x + 0.038397
+    return fwhm
+
+
+def gamma_fnc_50(x):  # ARCS Ei=50 meV
     fwhm = +9.1948e-07 * x**3 + 0.00020961 * x**2 - 0.03571 * x + 1.9454
     return fwhm
 
@@ -134,5 +137,6 @@ def gauss(x, a, c, f):
 
 
 if __name__ == "__main__":
-    print(rot_vec(np.pi / 2, [0, 1, 0]))
-    print(rot_vec(-np.pi / 2, [0, 1, 0]))
+    # print(rot_vec(np.pi / 2, [0, 1, 0]))
+    # print(rot_vec(-np.pi / 2, [0, 1, 0]))
+    print(gamma_fnc_1p55(np.array([-2, -1, 0, 1, 2])))

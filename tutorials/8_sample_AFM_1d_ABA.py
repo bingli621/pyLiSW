@@ -7,7 +7,7 @@ from Atoms import Atoms
 from Bonds import Bonds
 from Sample import Sample
 from LSWT import LSWT
-from utils import gamma_fnc
+from utils import gamma_fnc_50
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     n = (0, 1, 0)
     # temperature
     te = 20
-    afm_chain_ABA = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc)
+    afm_chain_ABA = Sample((a_eff, b_eff, c_eff), tau, n, te, gamma_fnc=gamma_fnc_50)
     # -------------------------------------------------------------
     # Add atoms
     # -------------------------------------------------------------
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         [-15, 15.01, 0.01],
     )
     sim_qespace.inten_calc()
-    sim_qespace.slice(slice_range, plot_axes=(0, 3), SIM=True, vmin=0, vmax=2)
+    sim_qespace.slice(slice_range, plot_axes=(0, 3), PLOT=True, vmin=0, vmax=0.75)
     # -------------------------------------------------------------
     # Making cuts
     # -------------------------------------------------------------
@@ -103,5 +103,62 @@ if __name__ == "__main__":
     #     [-15, 15.01, 0.01],
     # )
     # sim_qespace.cut(cut_range, plot_axis=3, SIM=True)
+    #
+    # -------------- making plots --------------------
+    n_row = 2
+    n_col = 1
+
+    fig, plot_axes = plt.subplots(
+        nrows=n_row,
+        ncols=n_col,
+        sharex=True,
+        sharey=True,
+        gridspec_kw={
+            "hspace": 0.1,
+            "wspace": 0.1,
+            "height_ratios": [1, 1],
+        },
+    )
+
+    slice_range = (
+        [1e-3, 4.02, 0.02],
+        [0.00, 0.01],
+        [0.00, 0.01],
+        [0, 15.01, 0.01],
+    )
+
+    x, y, sim, xlab, ylab, tit = sim_qespace.slice(
+        slice_range, plot_axes=(0, 3), PLOT=False
+    )
+
+    ax = plot_axes[0]
+    for i in range(int(np.shape(sim_qespace.eng)[-1] / 2)):
+        ax.plot(
+            sim_qespace.xlist,
+            sim_qespace.eng[:, 0, 0, i],
+            label="{}".format(i),
+            linewidth=3,
+        )
+    plot_axes[0].set_ylabel(ylab)
+    ax.grid(alpha=0.6)
+    ax.set_xlim([0, 4])
+    ax.legend()
+
+    ax = plot_axes[1]
+    im = ax.pcolormesh(x, y, sim, cmap="jet", vmin=0, vmax=0.75)
+    ax.grid(alpha=0.6)
+
+    plot_axes[1].set_ylabel(ylab)
+    plot_axes[1].set_xlabel(xlab)
+
+    gs = fig.add_gridspec(nrows=1, ncols=1, left=0.92, right=0.93, wspace=0.0)
+    ax_cb = fig.add_subplot(gs[0, 0])
+    ax_cb.set_title("max")
+    ax_cb.text(0.0, -0.02, "0", transform=ax_cb.transAxes, va="top", fontsize="x-large")
+    fig.colorbar(im, cax=ax_cb)
+    ax_cb.tick_params(axis="both", which="both", length=0)
+    ax_cb.set_yticks([])
+    ax_cb.set_yticklabels([])
+    ax_cb.set_xticks([])
 
     plt.show()

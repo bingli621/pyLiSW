@@ -575,16 +575,21 @@ class QEspace(object):
         """
         Plot dispersion along given high symmetry direction x, y or z
         """
-        AFM_FLAG = False
+        TAU_FLAG = False
         nq0, nq1, nq2, n_dim = np.shape(self.eng)
         if not self.Sample.tau == (0, 0, 0):  # AFM
-            AFM_FLAG = True
+            if np.sum(np.abs(self.eng - self.eng_plus_tau)) or np.sum(
+                np.abs(self.eng - self.eng_minus_tau)
+            ): # plus or minus tau is different
+                TAU_FLAG = True
+            else:
+                TAU_FLAG = False
         if q_axis == "x":
             plot_x = self.xlist
             label_x = self.axes_labels[0]
             idx1 = round((nq1 - 1) / 2)
             idx2 = round((nq2 - 1) / 2)
-            if AFM_FLAG:
+            if TAU_FLAG:
                 plot_ys = np.concatenate(
                     [
                         self.eng[:, idx1, idx2, :],
@@ -606,7 +611,7 @@ class QEspace(object):
             label_x = self.axes_labels[1]
             idx0 = round((nq0 - 1) / 2)
             idx2 = round((nq2 - 1) / 2)
-            if AFM_FLAG:
+            if TAU_FLAG:
                 plot_ys = np.concatenate(
                     [
                         self.eng[idx0, :, idx2, :],
@@ -628,7 +633,7 @@ class QEspace(object):
             label_x = self.axes_labels[2]
             idx0 = round((nq0 - 1) / 2)
             idx1 = round((nq1 - 1) / 2)
-            if AFM_FLAG:
+            if TAU_FLAG:
                 plot_ys = np.concatenate(
                     [
                         self.eng[idx0, idx1, :, :],

@@ -8,7 +8,7 @@ from Bonds import Bonds
 from Sample import Sample
 from LSWT import LSWT
 import matplotlib.pylab as plt
-from utils import gamma_fnc
+from utils import gamma_fnc_50
 
 # -------------------------------------------------------------
 # 1d FM chain, spin along z
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # temperature
     te = 2
     fm_chain = Sample(
-        (a_eff, b_eff, c_eff), tau, n, te, mag=[0, 0, -0], gamma_fnc=gamma_fnc
+        (a_eff, b_eff, c_eff), tau, n, te, mag=[0, 0, -0], gamma_fnc=gamma_fnc_50
     )
     # -------------------------------------------------------------
     # Add atoms
@@ -41,7 +41,7 @@ if __name__ == "__main__":
             t=(0, 0, 0),
             ion="Mn2",
             spin=s1,
-            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.0]],
+            aniso=[[0, 0, 0], [0, 0, 0], [0, 0, -0.01]],
         ),
     ]
     fm_chain.add_atoms(atoms)

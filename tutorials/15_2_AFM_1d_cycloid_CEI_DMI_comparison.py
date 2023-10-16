@@ -59,19 +59,6 @@ if __name__ == "__main__":
     ]
     afm_chain_DMI.add_bonds(bonds_DMI)
 
-    n_row = 2
-    n_col = 1
-
-    fig, plot_axes = plt.subplots(
-        nrows=n_row,
-        ncols=n_col,
-        sharex=True,
-        gridspec_kw={
-            "hspace": 0.1,
-            "wspace": 0.1,
-            "height_ratios": [15, 35],
-        },
-    )
     # -------------------------------------------------------------
     # Simulate dispersion
     # -------------------------------------------------------------
@@ -110,6 +97,19 @@ if __name__ == "__main__":
     )
 
     # -------------- making plots --------------------
+    n_row = 2
+    n_col = 1
+
+    fig, plot_axes = plt.subplots(
+        nrows=n_row,
+        ncols=n_col,
+        sharex=True,
+        gridspec_kw={
+            "hspace": 0.1,
+            "wspace": 0.1,
+            "height_ratios": [15, 35],
+        },
+    )
 
     ax = plot_axes[0]
     im = ax.pcolormesh(x0, y0, sim0, cmap="jet", vmin=0, vmax=5)

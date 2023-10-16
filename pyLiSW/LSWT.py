@@ -520,7 +520,7 @@ class LSWT(QEspace):
     @staticmethod
     def damping_factor_init(eng_k, step, gamma_fcn=None):
         """
-        Initialize dampping factor as a function of energy
+        Initialize damping factor as a function of energy
         defalt is energy step size, or a constant value
         """
         pstart = np.min(eng_k.real)
