@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# pixi lock file
+pixi.lock merge=binary linguist-language=YAML linguist-generated=true

@@ -1,5 +1,44 @@
 # pyLiSW (python Linear Spin Wave)
+[![Tests](https://github.com/bingli621/pyLiSW/actions/workflows/test.yml/badge.svg)](https://github.com/bingli621/pyLiSW/actions/workflows/test.yml)
+
  Modeling and simulation of single-crystal spin wave data from inelastic neutron scattering experiments, based on linear spin wave theory, using Python.
+
+## Installation
+
+Dependencies are managed with [pixi](https://pixi.sh). After installing pixi, from the repository root:
+
+```bash
+pixi install          # create the environment (pyLiSW is installed in editable mode)
+pixi run test         # run the test suite
+pixi run tutorial 1_FM_1d   # run a tutorial from tutorials/
+pixi shell            # activate the environment in your shell
+```
+
+Alternatively, install with pip into an existing environment:
+
+```bash
+pip install -e .
+```
+
+## Usage
+
+```python
+from pyLiSW import Atoms, Bonds, Sample, LSWT
+from pyLiSW.utils import gamma_fnc
+```
+
+See the scripts in [`tutorials/`](tutorials/) for complete examples.
+
+## Repository layout
+
+```
+src/pyLiSW/    the package (Atoms, Bonds, Sample, QEspace, LSWT, utils)
+tutorials/     example scripts and their output figures
+tests/         pytest test suite
+pyproject.toml project metadata, dependencies and pixi configuration
+```
+
+## Tutorials
 
 Tutorial 1. 1D FM chain
 

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from Bonds import Bonds
+from .Bonds import Bonds
 from tabulate import tabulate
-from utils import rot_vec
 
 
 class Sample(object):
