@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from utils import rot_vec
+from .utils import rot_vec
 
 
 class Bonds(object):

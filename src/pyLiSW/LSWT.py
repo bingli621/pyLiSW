@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-import time
-
 # from functools import partial
 # from multiprocessing import Pool
 import concurrent.futures
+import time
+
 import numpy as np
 import sympy as sp
 
-from Atoms import Atoms
-from QEspace import QEspace
-
-from matplotlib import pyplot as plt
+from .Atoms import Atoms
+from .QEspace import QEspace
 
 
 class LSWT(QEspace):
@@ -168,11 +166,11 @@ class LSWT(QEspace):
         n_dim = Sample.n_dim
         k_dim = np.shape(kx)[0]
         sp = (k_dim, n_dim, n_dim)
-        mat_A = np.zeros(shape=sp, dtype="complex_")
-        mat_B = np.zeros(shape=sp, dtype="complex_")
-        mat_mA = np.zeros(shape=sp, dtype="complex_")
-        mat_mB = np.zeros(shape=sp, dtype="complex_")
-        mat_C = np.zeros(shape=sp, dtype="complex_")
+        mat_A = np.zeros(shape=sp, dtype=complex)
+        mat_B = np.zeros(shape=sp, dtype=complex)
+        mat_mA = np.zeros(shape=sp, dtype=complex)
+        mat_mB = np.zeros(shape=sp, dtype=complex)
+        mat_C = np.zeros(shape=sp, dtype=complex)
 
         for Bond in Sample.Bonds:  # already doubled due to the reverse pair
             idx0, idx1 = Bond.idx
@@ -548,8 +546,10 @@ class LSWT(QEspace):
         for idx0, ek0 in enumerate(ek):
             if any(disp_list >= ek0):
                 idx = np.argmax(disp_list >= ek0) - 1
-                if idx == -1:  # special care for minimum
-                    idx == 0
+                # FIXME
+                # special care for minimum
+                # if idx == -1:
+                #     idx == 0
             else:
                 idx = np.size(disp_list) - 1
             gamma_mat[idx0] = gamma_list[idx]
@@ -792,18 +792,18 @@ class LSWT(QEspace):
         to determine which of the S'(q,w) terms are trivial
         """
         n_ion = self.Sample.n_dim
-        matY = np.zeros((n_ion, n_ion), dtype="complex_")
-        matZ = np.zeros((n_ion, n_ion), dtype="complex_")
-        matV = np.zeros((n_ion, n_ion), dtype="complex_")
-        matW = np.zeros((n_ion, n_ion), dtype="complex_")
-        mat = np.zeros((2 * n_ion, 2 * n_ion), dtype="complex_")
+        matY = np.zeros((n_ion, n_ion), dtype=complex)
+        matZ = np.zeros((n_ion, n_ion), dtype=complex)
+        matV = np.zeros((n_ion, n_ion), dtype=complex)
+        matW = np.zeros((n_ion, n_ion), dtype=complex)
+        mat = np.zeros((2 * n_ion, 2 * n_ion), dtype=complex)
 
         for i in range(n_ion):  # number of ions
             si = self.Sample.atoms[i].s
-            ui = self.Sample.atoms[i].u
+            ui = self.Sample.atoms[i].u[:, 0]
             for j in range(n_ion):
                 sj = self.Sample.atoms[j].s
-                uj = self.Sample.atoms[j].u
+                uj = self.Sample.atoms[j].u[:, 0]
                 matY[i, j] = np.sqrt(si * sj) * ui[alpha] * np.conj(uj[beta])
                 matZ[i, j] = np.sqrt(si * sj) * ui[alpha] * uj[beta]
                 matV[i, j] = np.sqrt(si * sj) * np.conj(ui[alpha]) * np.conj(uj[beta])
@@ -870,7 +870,7 @@ class LSWT(QEspace):
         for n in range(n_sqw):
             for sqw_component in self.sqw_components_coeffs[n]:
                 idx, _ = sqw_component
-                if not self.sqw_prime_components[idx] in sqw_prime_components:
+                if self.sqw_prime_components[idx] not in sqw_prime_components:
                     sqw_prime_components.append(self.sqw_prime_components[idx])
 
         for n in range(n_sqw):
@@ -892,14 +892,14 @@ class LSWT(QEspace):
         _, qx, qy, qz = np.shape(self.q_mesh)
         matY = np.zeros(
             (n_sqw_prime,) + (qx, qy, qz) + (n_ion, n_ion),
-            dtype="complex_",
+            dtype=complex,
         )
-        matZ = np.zeros_like(matY, dtype="complex_")
-        matV = np.zeros_like(matY, dtype="complex_")
-        matW = np.zeros_like(matY, dtype="complex_")
+        matZ = np.zeros_like(matY, dtype=complex)
+        matV = np.zeros_like(matY, dtype=complex)
+        matW = np.zeros_like(matY, dtype=complex)
         mat = np.zeros(
             (n_sqw_prime,) + (qx, qy, qz) + (2 * n_ion, 2 * n_ion),
-            dtype="complex_",
+            dtype=complex,
         )
         for idx, sqw_comp in enumerate(self.sqw_prime_components):
             _, alpha, beta = sqw_comp
@@ -969,7 +969,7 @@ class LSWT(QEspace):
         n_sqw_prime = np.shape(self.sqw_prime_components)[0]
         sz = (n_sqw_prime,) + np.shape(self.q_mesh)[1:] + (n_dim,)
 
-        sqw_prime = np.zeros(sz, dtype="complex_")
+        sqw_prime = np.zeros(sz, dtype=complex)
         for idx, sqw_prime_comp in enumerate(self.sqw_prime_components):
             tau, _, _ = sqw_prime_comp
 
@@ -1044,7 +1044,7 @@ class LSWT(QEspace):
         # n_dim = (2 * self.Sample.n_dim,)
         n_sqw_components = np.shape(self.sqw_components)[0]
         sz = (n_sqw_components,) + np.shape(self.q_mesh)[1:] + n_dim
-        sqw = np.zeros(sz, dtype="complex_")
+        sqw = np.zeros(sz, dtype=complex)
 
         self.energy_calc()
         self.sqw_prime_calc()
@@ -1110,7 +1110,7 @@ class LSWT(QEspace):
         # ------------------------------------------------------------
 
         n_sqw, qx, qy, qz, n_dim, n_tau = np.shape(self.sqw)
-        inten = np.zeros((qx, qy, qz, n_dim, n_tau), dtype="float_")
+        inten = np.zeros((qx, qy, qz, n_dim, n_tau), dtype=float)
 
         for idx in range(n_sqw):
             dp = self.dipolar_factors[idx, :, :, :]

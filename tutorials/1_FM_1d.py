@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-import sys
-from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent) + "/pyLiSW")
-from Atoms import Atoms
-from Bonds import Bonds
-from Sample import Sample
-from LSWT import LSWT
+from pyLiSW.Atoms import Atoms
+from pyLiSW.Bonds import Bonds
+from pyLiSW.Sample import Sample
+from pyLiSW.LSWT import LSWT
 import matplotlib.pylab as plt
-from utils import gamma_fnc_50
+from pyLiSW.utils import gamma_fnc_50
 
 # -------------------------------------------------------------
 # 1d FM chain, spin along z
